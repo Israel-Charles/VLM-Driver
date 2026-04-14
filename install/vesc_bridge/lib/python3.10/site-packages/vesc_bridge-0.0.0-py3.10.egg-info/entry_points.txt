@@ -1,0 +1,3 @@
+[console_scripts]
+vesc_bridge_node = vesc_bridge.vesc_bridge_node:main
+

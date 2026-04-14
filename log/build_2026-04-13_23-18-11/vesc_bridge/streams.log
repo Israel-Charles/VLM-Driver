@@ -1,0 +1,37 @@
+[0.876s] Invoking command in '/home/samaviajaffery/project_ws/src/vesc_bridge': PYTHONPATH=/home/samaviajaffery/project_ws/build/vesc_bridge/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/samaviajaffery/project_ws/install/vesc_bridge/lib/python3.10/site-packages: /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/vesc_bridge build --build-base /home/samaviajaffery/project_ws/build/vesc_bridge/build install --record /home/samaviajaffery/project_ws/build/vesc_bridge/install.log --single-version-externally-managed install_data
+[1.132s] running egg_info
+[1.132s] creating ../../build/vesc_bridge/vesc_bridge.egg-info
+[1.132s] writing ../../build/vesc_bridge/vesc_bridge.egg-info/PKG-INFO
+[1.132s] writing dependency_links to ../../build/vesc_bridge/vesc_bridge.egg-info/dependency_links.txt
+[1.132s] writing entry points to ../../build/vesc_bridge/vesc_bridge.egg-info/entry_points.txt
+[1.132s] writing requirements to ../../build/vesc_bridge/vesc_bridge.egg-info/requires.txt
+[1.132s] writing top-level names to ../../build/vesc_bridge/vesc_bridge.egg-info/top_level.txt
+[1.132s] writing manifest file '../../build/vesc_bridge/vesc_bridge.egg-info/SOURCES.txt'
+[1.135s] reading manifest file '../../build/vesc_bridge/vesc_bridge.egg-info/SOURCES.txt'
+[1.135s] writing manifest file '../../build/vesc_bridge/vesc_bridge.egg-info/SOURCES.txt'
+[1.135s] running build
+[1.135s] running build_py
+[1.137s] creating /home/samaviajaffery/project_ws/build/vesc_bridge/build
+[1.137s] creating /home/samaviajaffery/project_ws/build/vesc_bridge/build/lib
+[1.138s] creating /home/samaviajaffery/project_ws/build/vesc_bridge/build/lib/vesc_bridge
+[1.138s] copying vesc_bridge/vesc_bridge_node.py -> /home/samaviajaffery/project_ws/build/vesc_bridge/build/lib/vesc_bridge
+[1.138s] copying vesc_bridge/__init__.py -> /home/samaviajaffery/project_ws/build/vesc_bridge/build/lib/vesc_bridge
+[1.138s] running install
+[1.138s] running install_lib
+[1.138s] creating /home/samaviajaffery/project_ws/install/vesc_bridge/lib/python3.10/site-packages/vesc_bridge
+[1.138s] copying /home/samaviajaffery/project_ws/build/vesc_bridge/build/lib/vesc_bridge/vesc_bridge_node.py -> /home/samaviajaffery/project_ws/install/vesc_bridge/lib/python3.10/site-packages/vesc_bridge
+[1.143s] copying /home/samaviajaffery/project_ws/build/vesc_bridge/build/lib/vesc_bridge/__init__.py -> /home/samaviajaffery/project_ws/install/vesc_bridge/lib/python3.10/site-packages/vesc_bridge
+[1.143s] byte-compiling /home/samaviajaffery/project_ws/install/vesc_bridge/lib/python3.10/site-packages/vesc_bridge/vesc_bridge_node.py to vesc_bridge_node.cpython-310.pyc
+[1.143s] byte-compiling /home/samaviajaffery/project_ws/install/vesc_bridge/lib/python3.10/site-packages/vesc_bridge/__init__.py to __init__.cpython-310.pyc
+[1.143s] running install_data
+[1.144s] creating /home/samaviajaffery/project_ws/install/vesc_bridge/share/ament_index
+[1.144s] creating /home/samaviajaffery/project_ws/install/vesc_bridge/share/ament_index/resource_index
+[1.144s] creating /home/samaviajaffery/project_ws/install/vesc_bridge/share/ament_index/resource_index/packages
+[1.144s] copying resource/vesc_bridge -> /home/samaviajaffery/project_ws/install/vesc_bridge/share/ament_index/resource_index/packages
+[1.144s] copying package.xml -> /home/samaviajaffery/project_ws/install/vesc_bridge/share/vesc_bridge
+[1.144s] running install_egg_info
+[1.144s] Copying ../../build/vesc_bridge/vesc_bridge.egg-info to /home/samaviajaffery/project_ws/install/vesc_bridge/lib/python3.10/site-packages/vesc_bridge-0.0.0-py3.10.egg-info
+[1.144s] running install_scripts
+[1.178s] Installing vesc_bridge_node script to /home/samaviajaffery/project_ws/install/vesc_bridge/lib/vesc_bridge
+[1.180s] writing list of installed files to '/home/samaviajaffery/project_ws/build/vesc_bridge/install.log'
+[1.215s] Invoked command in '/home/samaviajaffery/project_ws/src/vesc_bridge' returned '0': PYTHONPATH=/home/samaviajaffery/project_ws/build/vesc_bridge/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/samaviajaffery/project_ws/install/vesc_bridge/lib/python3.10/site-packages: /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/vesc_bridge build --build-base /home/samaviajaffery/project_ws/build/vesc_bridge/build install --record /home/samaviajaffery/project_ws/build/vesc_bridge/install.log --single-version-externally-managed install_data

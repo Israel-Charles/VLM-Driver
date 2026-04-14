@@ -1,0 +1,35 @@
+running egg_info
+creating ../../build/command_mapper/command_mapper.egg-info
+writing ../../build/command_mapper/command_mapper.egg-info/PKG-INFO
+writing dependency_links to ../../build/command_mapper/command_mapper.egg-info/dependency_links.txt
+writing entry points to ../../build/command_mapper/command_mapper.egg-info/entry_points.txt
+writing requirements to ../../build/command_mapper/command_mapper.egg-info/requires.txt
+writing top-level names to ../../build/command_mapper/command_mapper.egg-info/top_level.txt
+writing manifest file '../../build/command_mapper/command_mapper.egg-info/SOURCES.txt'
+reading manifest file '../../build/command_mapper/command_mapper.egg-info/SOURCES.txt'
+writing manifest file '../../build/command_mapper/command_mapper.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/samaviajaffery/project_ws/build/command_mapper/build
+creating /home/samaviajaffery/project_ws/build/command_mapper/build/lib
+creating /home/samaviajaffery/project_ws/build/command_mapper/build/lib/command_mapper
+copying command_mapper/mapper_node.py -> /home/samaviajaffery/project_ws/build/command_mapper/build/lib/command_mapper
+copying command_mapper/__init__.py -> /home/samaviajaffery/project_ws/build/command_mapper/build/lib/command_mapper
+running install
+running install_lib
+creating /home/samaviajaffery/project_ws/install/command_mapper/lib/python3.10/site-packages/command_mapper
+copying /home/samaviajaffery/project_ws/build/command_mapper/build/lib/command_mapper/mapper_node.py -> /home/samaviajaffery/project_ws/install/command_mapper/lib/python3.10/site-packages/command_mapper
+copying /home/samaviajaffery/project_ws/build/command_mapper/build/lib/command_mapper/__init__.py -> /home/samaviajaffery/project_ws/install/command_mapper/lib/python3.10/site-packages/command_mapper
+byte-compiling /home/samaviajaffery/project_ws/install/command_mapper/lib/python3.10/site-packages/command_mapper/mapper_node.py to mapper_node.cpython-310.pyc
+byte-compiling /home/samaviajaffery/project_ws/install/command_mapper/lib/python3.10/site-packages/command_mapper/__init__.py to __init__.cpython-310.pyc
+running install_data
+creating /home/samaviajaffery/project_ws/install/command_mapper/share/ament_index
+creating /home/samaviajaffery/project_ws/install/command_mapper/share/ament_index/resource_index
+creating /home/samaviajaffery/project_ws/install/command_mapper/share/ament_index/resource_index/packages
+copying resource/command_mapper -> /home/samaviajaffery/project_ws/install/command_mapper/share/ament_index/resource_index/packages
+copying package.xml -> /home/samaviajaffery/project_ws/install/command_mapper/share/command_mapper
+running install_egg_info
+Copying ../../build/command_mapper/command_mapper.egg-info to /home/samaviajaffery/project_ws/install/command_mapper/lib/python3.10/site-packages/command_mapper-0.0.0-py3.10.egg-info
+running install_scripts
+Installing mapper_node script to /home/samaviajaffery/project_ws/install/command_mapper/lib/command_mapper
+writing list of installed files to '/home/samaviajaffery/project_ws/build/command_mapper/install.log'

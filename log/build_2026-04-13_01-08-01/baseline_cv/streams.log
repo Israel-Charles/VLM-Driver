@@ -1,0 +1,25 @@
+[1.246s] Invoking command in '/home/samaviajaffery/project_ws/src/baseline_cv': PYTHONPATH=/home/samaviajaffery/project_ws/build/baseline_cv/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/samaviajaffery/project_ws/install/baseline_cv/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/baseline_cv build --build-base /home/samaviajaffery/project_ws/build/baseline_cv/build install --record /home/samaviajaffery/project_ws/build/baseline_cv/install.log --single-version-externally-managed install_data
+[1.795s] running egg_info
+[1.800s] writing ../../build/baseline_cv/baseline_cv.egg-info/PKG-INFO
+[1.802s] writing dependency_links to ../../build/baseline_cv/baseline_cv.egg-info/dependency_links.txt
+[1.802s] writing entry points to ../../build/baseline_cv/baseline_cv.egg-info/entry_points.txt
+[1.802s] writing requirements to ../../build/baseline_cv/baseline_cv.egg-info/requires.txt
+[1.802s] writing top-level names to ../../build/baseline_cv/baseline_cv.egg-info/top_level.txt
+[1.810s] reading manifest file '../../build/baseline_cv/baseline_cv.egg-info/SOURCES.txt'
+[1.815s] writing manifest file '../../build/baseline_cv/baseline_cv.egg-info/SOURCES.txt'
+[1.815s] running build
+[1.815s] running build_py
+[1.819s] copying baseline_cv/fake_camera_pub.py -> /home/samaviajaffery/project_ws/build/baseline_cv/build/lib/baseline_cv
+[1.820s] running install
+[1.820s] running install_lib
+[1.820s] copying /home/samaviajaffery/project_ws/build/baseline_cv/build/lib/baseline_cv/fake_camera_pub.py -> /home/samaviajaffery/project_ws/install/baseline_cv/lib/python3.10/site-packages/baseline_cv
+[1.820s] byte-compiling /home/samaviajaffery/project_ws/install/baseline_cv/lib/python3.10/site-packages/baseline_cv/fake_camera_pub.py to fake_camera_pub.cpython-310.pyc
+[1.826s] running install_data
+[1.826s] running install_egg_info
+[1.831s] removing '/home/samaviajaffery/project_ws/install/baseline_cv/lib/python3.10/site-packages/baseline_cv-0.0.0-py3.10.egg-info' (and everything under it)
+[1.833s] Copying ../../build/baseline_cv/baseline_cv.egg-info to /home/samaviajaffery/project_ws/install/baseline_cv/lib/python3.10/site-packages/baseline_cv-0.0.0-py3.10.egg-info
+[1.833s] running install_scripts
+[1.873s] Installing baseline_node script to /home/samaviajaffery/project_ws/install/baseline_cv/lib/baseline_cv
+[1.874s] Installing fake_camera_pub script to /home/samaviajaffery/project_ws/install/baseline_cv/lib/baseline_cv
+[1.876s] writing list of installed files to '/home/samaviajaffery/project_ws/build/baseline_cv/install.log'
+[1.936s] Invoked command in '/home/samaviajaffery/project_ws/src/baseline_cv' returned '0': PYTHONPATH=/home/samaviajaffery/project_ws/build/baseline_cv/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/samaviajaffery/project_ws/install/baseline_cv/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/baseline_cv build --build-base /home/samaviajaffery/project_ws/build/baseline_cv/build install --record /home/samaviajaffery/project_ws/build/baseline_cv/install.log --single-version-externally-managed install_data
