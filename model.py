@@ -1,3 +1,10 @@
+####
+#Run the model with: 
+# modal deploy model.py
+
+# stop it with:
+# modal app stop example-sglang-low-latency
+####
 import asyncio
 import json
 import subprocess
