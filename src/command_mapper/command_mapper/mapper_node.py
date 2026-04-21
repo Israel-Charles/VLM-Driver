@@ -19,7 +19,7 @@ class CommandMapperNode(Node):
         super().__init__('command_mapper_node')
 
         self.declare_parameter('decision_topic', '/baseline/decision')
-        self.declare_parameter('command_topic', '/vehicle/ackermann_cmd')
+        self.declare_parameter('command_topic', '/drive')
 
         self.steering_map_deg: Dict[str, float] = {
             'hard_left': 40.0,

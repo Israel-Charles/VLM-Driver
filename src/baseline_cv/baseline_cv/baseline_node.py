@@ -19,7 +19,7 @@ class BaselineCVNode(Node):
 
         self.bridge = CvBridge() #library to conver ros msgs to opencv 
 
-        self.declare_parameter('image_topic', '/camera/image_raw')
+        self.declare_parameter('image_topic', '/camera/camera/color/image_raw')
         self.declare_parameter('roi_top_ratio', 0.55)
         self.declare_parameter('blur_kernel', 5)
         self.declare_parameter('canny_low', 60)
