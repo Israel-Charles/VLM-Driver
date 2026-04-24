@@ -1,0 +1,37 @@
+[1.213s] Invoking command in '/home/samaviajaffery/project_ws/src/command_mapper': AMENT_PREFIX_PATH=/home/samaviajaffery/project_ws/install/vlm_driver_msgs CMAKE_PREFIX_PATH=/home/samaviajaffery/project_ws/install/vlm_driver_msgs LD_LIBRARY_PATH=/home/samaviajaffery/project_ws/install/vlm_driver_msgs/lib PYTHONPATH=/home/samaviajaffery/project_ws/build/command_mapper/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/samaviajaffery/project_ws/install/command_mapper/lib/python3.10/site-packages:/home/samaviajaffery/project_ws/install/vlm_driver_msgs/local/lib/python3.10/dist-packages /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/command_mapper build --build-base /home/samaviajaffery/project_ws/build/command_mapper/build install --record /home/samaviajaffery/project_ws/build/command_mapper/install.log --single-version-externally-managed install_data
+[1.567s] running egg_info
+[1.568s] creating ../../build/command_mapper/command_mapper.egg-info
+[1.571s] writing ../../build/command_mapper/command_mapper.egg-info/PKG-INFO
+[1.571s] writing dependency_links to ../../build/command_mapper/command_mapper.egg-info/dependency_links.txt
+[1.571s] writing entry points to ../../build/command_mapper/command_mapper.egg-info/entry_points.txt
+[1.571s] writing requirements to ../../build/command_mapper/command_mapper.egg-info/requires.txt
+[1.571s] writing top-level names to ../../build/command_mapper/command_mapper.egg-info/top_level.txt
+[1.571s] writing manifest file '../../build/command_mapper/command_mapper.egg-info/SOURCES.txt'
+[1.574s] reading manifest file '../../build/command_mapper/command_mapper.egg-info/SOURCES.txt'
+[1.574s] writing manifest file '../../build/command_mapper/command_mapper.egg-info/SOURCES.txt'
+[1.574s] running build
+[1.575s] running build_py
+[1.577s] creating /home/samaviajaffery/project_ws/build/command_mapper/build
+[1.578s] creating /home/samaviajaffery/project_ws/build/command_mapper/build/lib
+[1.578s] creating /home/samaviajaffery/project_ws/build/command_mapper/build/lib/command_mapper
+[1.578s] copying command_mapper/mapper_node.py -> /home/samaviajaffery/project_ws/build/command_mapper/build/lib/command_mapper
+[1.578s] copying command_mapper/__init__.py -> /home/samaviajaffery/project_ws/build/command_mapper/build/lib/command_mapper
+[1.578s] running install
+[1.578s] running install_lib
+[1.578s] creating /home/samaviajaffery/project_ws/install/command_mapper/lib/python3.10/site-packages/command_mapper
+[1.578s] copying /home/samaviajaffery/project_ws/build/command_mapper/build/lib/command_mapper/mapper_node.py -> /home/samaviajaffery/project_ws/install/command_mapper/lib/python3.10/site-packages/command_mapper
+[1.578s] copying /home/samaviajaffery/project_ws/build/command_mapper/build/lib/command_mapper/__init__.py -> /home/samaviajaffery/project_ws/install/command_mapper/lib/python3.10/site-packages/command_mapper
+[1.582s] byte-compiling /home/samaviajaffery/project_ws/install/command_mapper/lib/python3.10/site-packages/command_mapper/mapper_node.py to mapper_node.cpython-310.pyc
+[1.582s] byte-compiling /home/samaviajaffery/project_ws/install/command_mapper/lib/python3.10/site-packages/command_mapper/__init__.py to __init__.cpython-310.pyc
+[1.582s] running install_data
+[1.582s] creating /home/samaviajaffery/project_ws/install/command_mapper/share/ament_index
+[1.582s] creating /home/samaviajaffery/project_ws/install/command_mapper/share/ament_index/resource_index
+[1.582s] creating /home/samaviajaffery/project_ws/install/command_mapper/share/ament_index/resource_index/packages
+[1.582s] copying resource/command_mapper -> /home/samaviajaffery/project_ws/install/command_mapper/share/ament_index/resource_index/packages
+[1.582s] copying package.xml -> /home/samaviajaffery/project_ws/install/command_mapper/share/command_mapper
+[1.582s] running install_egg_info
+[1.587s] Copying ../../build/command_mapper/command_mapper.egg-info to /home/samaviajaffery/project_ws/install/command_mapper/lib/python3.10/site-packages/command_mapper-0.0.0-py3.10.egg-info
+[1.588s] running install_scripts
+[1.620s] Installing mapper_node script to /home/samaviajaffery/project_ws/install/command_mapper/lib/command_mapper
+[1.621s] writing list of installed files to '/home/samaviajaffery/project_ws/build/command_mapper/install.log'
+[1.660s] Invoked command in '/home/samaviajaffery/project_ws/src/command_mapper' returned '0': AMENT_PREFIX_PATH=/home/samaviajaffery/project_ws/install/vlm_driver_msgs CMAKE_PREFIX_PATH=/home/samaviajaffery/project_ws/install/vlm_driver_msgs LD_LIBRARY_PATH=/home/samaviajaffery/project_ws/install/vlm_driver_msgs/lib PYTHONPATH=/home/samaviajaffery/project_ws/build/command_mapper/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/samaviajaffery/project_ws/install/command_mapper/lib/python3.10/site-packages:/home/samaviajaffery/project_ws/install/vlm_driver_msgs/local/lib/python3.10/dist-packages /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/command_mapper build --build-base /home/samaviajaffery/project_ws/build/command_mapper/build install --record /home/samaviajaffery/project_ws/build/command_mapper/install.log --single-version-externally-managed install_data

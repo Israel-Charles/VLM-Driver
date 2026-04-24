@@ -1,0 +1,2 @@
+Invoking command in '/home/samaviajaffery/project_ws/build/vlm_driver_msgs': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake /home/samaviajaffery/project_ws/src/vlm_driver_msgs -DCMAKE_INSTALL_PREFIX=/home/samaviajaffery/project_ws/install/vlm_driver_msgs
+Invoked command in '/home/samaviajaffery/project_ws/build/vlm_driver_msgs' returned '1': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake /home/samaviajaffery/project_ws/src/vlm_driver_msgs -DCMAKE_INSTALL_PREFIX=/home/samaviajaffery/project_ws/install/vlm_driver_msgs

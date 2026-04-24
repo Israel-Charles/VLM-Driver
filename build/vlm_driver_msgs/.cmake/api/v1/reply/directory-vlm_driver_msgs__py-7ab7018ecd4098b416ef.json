@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "vlm_driver_msgs__py",
+		"source" : "/home/samaviajaffery/project_ws/build/vlm_driver_msgs/vlm_driver_msgs__py"
+	}
+}
