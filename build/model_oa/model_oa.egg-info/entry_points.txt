@@ -1,0 +1,3 @@
+[console_scripts]
+model_oa_client = model_oa.model_oa_client_node:main
+

@@ -13,7 +13,7 @@ class FakeCameraPublisher(Node):
     def __init__(self):
         super().__init__('fake_camera_publisher')
 
-        self.pub = self.create_publisher(Image, '/camera/image_raw', 10)
+        self.pub = self.create_publisher(Image, '/camera/camera/color/image_raw', 10)
         self.bridge = CvBridge()
 
         self.timer = self.create_timer(1.0, self.publish_test_frame)
@@ -38,7 +38,7 @@ class FakeCameraPublisher(Node):
 
     def publish_test_frame(self):
         frame = self.make_base_frame()
-        label = "clear"
+        label = ""
 
         # IMPORTANT:
         # Baseline node uses roi_top_ratio=0.55, so only bottom 45% matters.

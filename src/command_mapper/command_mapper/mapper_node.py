@@ -18,7 +18,8 @@ class CommandMapperNode(Node):
     def __init__(self) -> None:
         super().__init__('command_mapper_node')
 
-        self.declare_parameter('decision_topic', '/baseline/decision')
+        self.declare_parameter('decision_topic1', '/baseline/decision')
+        self.declare_parameter('decision_topic2', 'model_oa/decision')
         self.declare_parameter('command_topic', '/drive')
 
         self.steering_map_deg: Dict[str, float] = {
@@ -38,12 +39,20 @@ class CommandMapperNode(Node):
             'fast': 5.0,
         }
 
-        decision_topic = self.get_parameter('decision_topic').value
+        decision_topic1 = self.get_parameter('decision_topic1').value
+        decision_topic2=self.get_parameter('decision_topic2').value
         command_topic = self.get_parameter('command_topic').value
 
         self.sub = self.create_subscription(
             DrivingDecisions,
-            decision_topic,
+            decision_topic1,
+            self.decision_callback, #everytime the topic is received run this call_back
+            10
+        )
+
+        self.sub = self.create_subscription(
+            DrivingDecisions,
+            decision_topic2,
             self.decision_callback, #everytime the topic is received run this call_back
             10
         )
