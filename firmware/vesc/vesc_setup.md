@@ -265,3 +265,9 @@ Account creation is required (email only). Versions available for Linux, Windows
 ![ERPM Settings](img/erpm.png)
 
 > Ensure ERPM limits align with odometry mapping in your software stack before increasing speed.
+
+---
+
+## *Acknowledgements*
+
+>*This vehicle build is based on and follows a design philosophy similar to the open-source autonomous vehicle platform **RoboRacer (F1TENTH ecosystem)**.* 
