@@ -423,6 +423,8 @@ def main(args=None):
         node.get_logger().error(e.message)
     except KeyboardInterrupt:
         pass
-
-    node.destroy_node()
-    rclpy.shutdown()
+    finally:
+        if node is not None:
+            node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()

@@ -53,6 +53,11 @@ def generate_launch_description():
         'config',
         'realsense.yaml'
     )
+    camera_capture_config = os.path.join(
+        get_package_share_directory('camera_capture'),
+        'config',
+        'camera_capture.yaml'
+    )
 
     joy_la = DeclareLaunchArgument(
         'joy_config',
@@ -74,8 +79,14 @@ def generate_launch_description():
         'realsense_config',
         default_value=realsense_config,
         description='Description for RealSense RGB config')
+    camera_capture_la = DeclareLaunchArgument(
+        'camera_capture_config',
+        default_value=camera_capture_config,
+        description='Description for camera capture config')
 
-    ld = LaunchDescription([joy_la, vesc_la, sensors_la, mux_la, realsense_la])
+    ld = LaunchDescription([
+        joy_la, vesc_la, sensors_la, mux_la, realsense_la, camera_capture_la
+    ])
 
     joy_node = Node(
         package='joy',
@@ -142,6 +153,15 @@ def generate_launch_description():
         emulate_tty=True,
     )
 
+    camera_capture_node = Node(
+        package='camera_capture',
+        executable='camera_capture_node',
+        name='camera_capture_node',
+        output='screen',
+        parameters=[LaunchConfiguration('camera_capture_config')],
+        emulate_tty=True,
+    )
+
     # finalize
     ld.add_action(joy_node)
     ld.add_action(joy_teleop_node)
@@ -156,5 +176,6 @@ def generate_launch_description():
     ld.add_action(ackermann_mux_node)
     ld.add_action(static_tf_node)
     ld.add_action(realsense_node)
+    ld.add_action(camera_capture_node)
 
     return ld

@@ -280,10 +280,16 @@ def main(args=None):
 
     node = JoystickRelay()
 
-    rclpy.spin(node)
+    try:
+        rclpy.spin(node)
 
-    node.destroy_node()
-    rclpy.shutdown()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if node is not None:
+            node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':
