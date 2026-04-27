@@ -116,7 +116,7 @@ NX> 162 NX service is running.
 
 ---
 
-# Step 2: Find the Robot IP Address
+# Step 2: Find the Onboard Computer IP Address
 
 You need the onboard computer’s IP address to connect.
 
