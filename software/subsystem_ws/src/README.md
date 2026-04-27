@@ -6,8 +6,27 @@ streaming.
 
 ## Quick Start
 
+### Install Dependencies if Missing
+
+**If you had never initialized `rosdep` before, run:*
 ```bash
-cd ~/ros2_ws
+sudo rosdep init
+```
+
+Go to the `susbsytem_ws` workspace where the folder `src` resides
+
+Run the following:
+
+```bash
+rosdep update
+rosdep install --from-paths src -i -y
+```
+
+*Might need to run `rosdep update --include-eol-distros`*
+
+### Build Workspace
+
+```bash
 colcon build --symlink-install
 source install/setup.bash
 ros2 launch subsystem_stack bringup.launch.py
@@ -24,6 +43,66 @@ by controller:
 | PS4 (DualShock)  | L1          | R1          |
 
 Button bindings are configurable in the joy_teleop parameter file.
+
+## Steering Axis Configuration
+
+Steering axis mappings differ by controller and must be set correctly in the configuration file under:
+
+```
+human_control -> drive-steering_angle
+```
+
+Use the following defaults:
+
+| Controller      | Axis |
+| --------------- | ---- |
+| PS4 (DualShock) | 2    |
+| Logitech F-710  | 3    |
+
+Ensure the correct axis is set to achieve proper steering response during teleoperation.
+
+---
+
+## Mapping Joystick Controls
+
+If during teleoperation the joystick isn't responding as expected, you may need to remap the joystick axes in the `joy_teleop.yaml` file. Here's how to do it:
+
+**Locate the Configuration File**
+The file you need to edit is located at:
+
+```
+.../subsystem_stack/config/joy_teleop.yaml
+```
+
+**Launch the Bringup and Check the Joy Topic**
+To identify the joystick mapping, launch the bringup system and monitor the `/joy` topic to inspect joystick input.
+
+Run the following command:
+
+```
+ros2 topic echo /joy
+```
+
+**Move the Joystick**
+As you move the joystick in different directions, observe the values in the echoed message. The indices in the `axes` array that change correspond to the axis IDs for each joystick movement.
+
+**Modify the YAML**
+Once you've identified the correct indices (axis IDs), update the `joy_teleop.yaml` file under the `human_control` section to reflect the correct mappings.
+
+**Rebuild the Package (if needed)**
+After making changes, rebuild your workspace to ensure updates take effect:
+
+```
+colcon build
+```
+
+Then source your workspace again:
+
+```
+source install/setup.bash
+```
+
+---
 
 ## Topics
 
