@@ -1,3 +1,0 @@
-[0.000000] (-) TimerEvent: {}
-[0.001754] (-) JobUnselected: {'identifier': 'my-test-package'}
-[0.002179] (-) EventReactorShutdown: {}
