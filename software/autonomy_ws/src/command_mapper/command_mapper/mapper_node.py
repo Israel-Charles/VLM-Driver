@@ -34,7 +34,7 @@ class CommandMapperNode(Node):
 
         self.speed_map_mps: Dict[str, float] = {
             'stop': 0.0,
-            'creep': 0.3,
+            'creep': 1.0, # minimum speed for car is 1m/s :(
             'slow': 1.0,
             'medium': 2.0,
             'fast': 3.0,
