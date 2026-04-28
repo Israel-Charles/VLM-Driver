@@ -26,6 +26,7 @@ setup(
         'console_scripts': [
             'baseline_node = baseline_cv.baseline_node:main',
             'fake_camera_pub= baseline_cv.fake_camera_pub:main',
+            'video_to_image= baseline_cv.video_to_image:main'
         ],
     },
 )
