@@ -1,0 +1,82 @@
+vlm_driver_node:
+  ros__parameters:
+    # Path to models.yaml. Resolved at launch time via the launch file.
+    models_config: ""
+    # Override of model_root from models.yaml. Empty string means use the value in models.yaml.
+    model_root: ""
+    # Which key from models.yaml to load on startup.
+    selected_model: qwen2_5_vl_7b
+    # If true, load model lazily on first inference request instead of at startup.
+    lazy_load: false
+
+    # Topics
+    image_topic: /camera/color/image_raw
+    drive_topic: /drive
+
+    # Inference cadence
+    inference_rate_hz: 5.0           # cap on how often we run the model
+    drop_stale_frames: true          # always use the most recent frame
+
+    # Generation
+    max_new_tokens: 128
+
+    # HF token. Leave blank to fall back to env vars or huggingface-cli login.
+    # Prefer setting HF_TOKEN in shell instead of writing it here.
+    #
+    # To set token in SHELL, run this in your terminal:
+    # `export HF_TOKEN="your_huggingface_token_here"`
+    #
+    # This will only make it active in current terminal windows
+    #
+    # To make it persistent, add it to your current shell, such as `.bashrc`. Ex: 
+    # `echo 'export HF_TOKEN="your_huggingface_token_here"' >> ~/.bashrc`
+    # `source ~/.bashrc`
+
+    hf_token: ""
+
+    # Label to value mappings.
+    steering_map_deg:
+      hard_left: 30.0
+      left: 20.0
+      slight_left: 10.0
+      straight: 0.0
+      slight_right: -10.0
+      right: -20.0
+      hard_right: -30.0
+
+    speed_map_mps:
+      stop: 0.0
+      slow: 1.0
+      medium: 2.0
+      fast: 3.0
+
+    # Safety: clamp speed if confidence is below this (0 disables).
+    min_confidence_for_motion: 0.2
+
+    # If model output cannot be parsed, command this:
+    fallback_steering_label: straight
+    fallback_speed_label: stop
+
+    # Prompt sent with every frame.
+    prompt: |
+      You are the obstacle avoidance model for a small autonomous vehicle.
+      Look at the front camera image and choose a safe driving action.
+      Return raw JSON only.
+      Do not use markdown.
+      Do not add explanation outside the JSON.
+      Allowed steering_label values:
+      hard_left, left, slight_left, straight, slight_right, right, hard_right
+      Allowed speed_label values:
+      stop, slow, medium, fast
+      Rules:
+      - Use emergency_stop=true if there is an immediate collision risk.
+      - If emergency_stop=true, speed_label must be "stop".
+      - confidence must be a number between 0.0 and 1.0.
+      JSON format:
+      {
+        "steering_label": "...",
+        "speed_label": "...",
+        "confidence": 0.0,
+        "emergency_stop": false,
+        "reason": "short reason"
+      }

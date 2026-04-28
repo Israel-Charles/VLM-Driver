@@ -1,0 +1,8 @@
+transformers>=4.45
+accelerate
+huggingface_hub
+torch
+pillow
+pyyaml
+qwen-vl-utils[decord]
+hf_transfer
