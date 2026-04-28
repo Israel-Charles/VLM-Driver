@@ -34,9 +34,10 @@ class CommandMapperNode(Node):
 
         self.speed_map_mps: Dict[str, float] = {
             'stop': 0.0,
-            'slow': 2.0,
-            'medium': 3.0,
-            'fast': 5.0,
+            'creep': 0.3,
+            'slow': 1.0,
+            'medium': 2.0,
+            'fast': 3.0,
         }
 
         decision_topic1 = self.get_parameter('decision_topic1').value

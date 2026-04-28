@@ -19,17 +19,17 @@ class BaselineCVNode(Node):
 
         self.bridge = CvBridge() #library to conver ros msgs to opencv 
 
-        self.declare_parameter('image_topic', '/camera/image_raw')
-        self.declare_parameter('roi_top_ratio', 0.55)
+        self.declare_parameter('image_topic', '/camera/camera/color/image_raw')
+        self.declare_parameter('roi_top_ratio', 0) #no cutting
         self.declare_parameter('blur_kernel', 5)
         self.declare_parameter('canny_low', 60)
         self.declare_parameter('canny_high', 150)
         self.declare_parameter('dilate_iterations', 1)
 
-        self.declare_parameter('stop_score_threshold', 0.22)
-        self.declare_parameter('blocked_score_threshold', 0.16)
-        self.declare_parameter('fast_score_threshold', 0.05)
-        self.declare_parameter('medium_score_threshold', 0.10)
+        self.declare_parameter('stop_score_threshold', 0.08)
+        self.declare_parameter('blocked_score_threshold', 0.05)
+        self.declare_parameter('fast_score_threshold', 0.015)
+        self.declare_parameter('medium_score_threshold', 0.04)
 
         image_topic = self.get_parameter('image_topic').value #subscribes to the camera image topic
 
@@ -63,6 +63,14 @@ class BaselineCVNode(Node):
 
         self.last_frame_time = None
 
+        self.stop_streak = 0
+        self.creep_frames_left = 0
+        self.creep_steering_label = 'straight'
+
+        self.declare_parameter('creep_trigger_frames', 10)
+        self.declare_parameter('creep_duration_frames', 12)
+        self.declare_parameter('creep_clear_margin', 0.03)
+
         self.steering_map_deg: Dict[str, float] = {
             'hard_left': 40.0,
             'left': 25.0,
@@ -75,9 +83,10 @@ class BaselineCVNode(Node):
 
         self.speed_map_mps: Dict[str, float] = {
             'stop': 0.0,
-            'slow': 2.0,
-            'medium': 3.0,
-            'fast': 5.0,
+            'creep': 0.3,
+            'slow': 1.0,
+            'medium': 2.0,
+            'fast': 3.0,
         }
 
         self.get_logger().info('Baseline CV node started.')
@@ -100,6 +109,12 @@ class BaselineCVNode(Node):
         decision_start = time.perf_counter()
         sector_scores = self.compute_sector_scores(mask)
         steering_label, speed_label, confidence, emergency_stop = self.make_decision(sector_scores)
+        steering_label, speed_label, confidence, emergency_stop = self.apply_creep_recovery(
+        sector_scores,
+        steering_label,
+        speed_label,
+        confidence,
+        emergency_stop )
         decision_end = time.perf_counter()
 
         decision_msg = DrivingDecisions()
@@ -112,7 +127,8 @@ class BaselineCVNode(Node):
         decision_msg.confidence = float(confidence)
         decision_msg.emergency_stop = bool(emergency_stop)
         self.decision_pub.publish(decision_msg)
-
+         
+        self.get_logger().info(f"Speed_label: {decision_msg.speed_label}, steering_label: {decision_msg.steering_label}")
         overlay = self.draw_overlay(
             frame=frame,
             roi=roi,
@@ -155,7 +171,8 @@ class BaselineCVNode(Node):
         metrics.total_ms = float((total_end - total_start) * 1000.0)
         metrics.fps = float(fps)
         self.metrics_pub.publish(metrics)
-
+    
+    
     def extract_roi(self, frame: np.ndarray) -> Tuple[np.ndarray, int]:
 
         """
@@ -169,31 +186,39 @@ class BaselineCVNode(Node):
         return roi, roi_y
 
     def compute_obstacle_mask(self, roi: np.ndarray) -> np.ndarray:
-        blur_kernel = int(self.get_parameter('blur_kernel').value)
-        canny_low = int(self.get_parameter('canny_low').value)
-        canny_high = int(self.get_parameter('canny_high').value)
-        dilate_iterations = int(self.get_parameter('dilate_iterations').value)
+        """
+        Computes obstacle mask.
 
-        if blur_kernel % 2 == 0:
-            blur_kernel += 1
+        For the current track, the main obstacle is orange.
+        So instead of detecting generic edges, detect orange regions in HSV.
+        White pixels = obstacle.
+        Black pixels = free/ignored.
+        """
 
-        gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(gray, (blur_kernel, blur_kernel), 0)
+        # Convert BGR image to HSV because color thresholding is easier in HSV.
+        hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
 
-        edges = cv2.Canny(blurred, canny_low, canny_high)
+        # Orange color range.
+        lower_orange = np.array([0, 45, 40], dtype=np.uint8)
+        upper_orange = np.array([35, 255, 255], dtype=np.uint8)
 
-        kernel = np.ones((3, 3), np.uint8)
-        mask = cv2.dilate(edges, kernel, iterations=dilate_iterations) #kinda like hysteresis, outputting the max value
+        mask = cv2.inRange(hsv, lower_orange, upper_orange)
 
-        # Remove very small speckles to reduce noise.
+        # Clean small holes and random dots.
+        kernel = np.ones((5, 5), np.uint8)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=1)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=1)
+
+        # Remove very small blobs.
         num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
         cleaned = np.zeros_like(mask)
-        min_area = 40
+
+        min_area = 80
 
         for label in range(1, num_labels):
-            area = stats[label, cv2.CC_STAT_AREA] #checks the area of the component
-            if area >= min_area:  #only keep the ones with area 40, to avoid random blobs
-                cleaned[labels == label] = 255 #labels selected vs cleaned, white pixels represent obstacles
+            area = stats[label, cv2.CC_STAT_AREA]
+            if area >= min_area:
+                cleaned[labels == label] = 255
 
         return cleaned
 
@@ -259,7 +284,62 @@ class BaselineCVNode(Node):
         if right + 0.03 < center:
             return 'right', 'slow', confidence, False
         return 'slight_right', 'slow', confidence, False
+     
+    def apply_creep_recovery(
+        self,
+        scores: Dict[str, float],
+        steering_label: str,
+        speed_label: str,
+        confidence: float,
+        emergency_stop: bool
+    ) -> Tuple[str, str, float, bool]:
+        """
+        Forward-only recovery.
 
+        If the car has been stopped for several frames, it creeps very slowly
+        toward the side with the lower obstacle score.
+        """
+
+        trigger_frames = int(self.get_parameter('creep_trigger_frames').value)
+        creep_duration = int(self.get_parameter('creep_duration_frames').value)
+        margin = float(self.get_parameter('creep_clear_margin').value)
+
+        left = scores['left']
+        center = scores['center']
+        right = scores['right']
+
+        # If already creeping, keep the same command for a short time.
+        if self.creep_frames_left > 0:
+            self.creep_frames_left -= 1
+            return self.creep_steering_label, 'creep', 0.70, False
+
+        # Count consecutive stop frames.
+        if speed_label == 'stop':
+            self.stop_streak += 1
+        else:
+            self.stop_streak = 0
+
+        # Not stuck long enough yet.
+        if self.stop_streak < trigger_frames:
+            return steering_label, speed_label, confidence, emergency_stop
+
+        # Reset stop streak once recovery begins.
+        self.stop_streak = 0
+
+        # Pick the clearer side.
+        # Lower score = less obstacle.
+        if left + margin < right:
+            self.creep_steering_label = 'hard_left'
+        elif right + margin < left:
+            self.creep_steering_label = 'hard_right'
+        else:
+            # If both sides look similar, do not blindly creep.
+            # This avoids driving into a fully blocked wall.
+            return 'straight', 'stop', 0.90, True
+
+        self.creep_frames_left = creep_duration
+
+        return self.creep_steering_label, 'creep', 0.70, False
     def draw_overlay(
         self,
         frame: np.ndarray,
