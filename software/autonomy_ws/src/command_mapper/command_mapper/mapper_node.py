@@ -22,20 +22,20 @@ class CommandMapperNode(Node):
         self.declare_parameter('command_topic', '/drive')
 
         self.steering_map_deg: Dict[str, float] = {
-            'hard_left': 40.0,
-            'left': 25.0,
+            'hard_left': 30.0,
+            'left': 20.0,
             'slight_left': 10.0,
             'straight': 0.0,
             'slight_right': -10.0,
-            'right': -25.0,
-            'hard_right': -40.0,
+            'right': -20.0,
+            'hard_right': -30.0,
         }
 
         self.speed_map_mps: Dict[str, float] = {
             'stop': 0.0,
-            'slow': 2.0,
-            'medium': 3.0,
-            'fast': 5.0,
+            'slow': 1.0,
+            'medium': 2.0,
+            'fast': 3.0,
         }
 
         decision_topic = self.get_parameter('decision_topic').value
@@ -91,8 +91,10 @@ def main(args=None) -> None:
     except KeyboardInterrupt:
         pass
     finally:
-        node.destroy_node()
-        rclpy.shutdown()
+        if node is not None:
+            node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':

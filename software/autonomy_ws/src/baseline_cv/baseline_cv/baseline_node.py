@@ -19,7 +19,7 @@ class BaselineCVNode(Node):
 
         self.bridge = CvBridge() #library to conver ros msgs to opencv 
 
-        self.declare_parameter('image_topic', '/camera/camera/color/image_raw')
+        self.declare_parameter('image_topic', '/camera/color/image_raw')
         self.declare_parameter('roi_top_ratio', 0.55)
         self.declare_parameter('blur_kernel', 5)
         self.declare_parameter('canny_low', 60)
@@ -64,20 +64,20 @@ class BaselineCVNode(Node):
         self.last_frame_time = None
 
         self.steering_map_deg: Dict[str, float] = {
-            'hard_left': 40.0,
-            'left': 25.0,
+            'hard_left': 30.0,
+            'left': 20.0,
             'slight_left': 10.0,
             'straight': 0.0,
             'slight_right': -10.0,
-            'right': -25.0,
-            'hard_right': -40.0,
+            'right': -20.0,
+            'hard_right': -30.0,
         }
 
         self.speed_map_mps: Dict[str, float] = {
             'stop': 0.0,
-            'slow': 2.0,
-            'medium': 3.0,
-            'fast': 5.0,
+            'slow': 1.0,
+            'medium': 2.0,
+            'fast': 3.0,
         }
 
         self.get_logger().info('Baseline CV node started.')
