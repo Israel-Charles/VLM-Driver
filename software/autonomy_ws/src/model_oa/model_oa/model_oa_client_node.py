@@ -28,8 +28,8 @@ class ModelOAClient(Node):
                 "export MODEL_OA_URL=https://samaviajaffery--example-sglang-low-latency-sglang-dev.us-east.modal.direct/v1/chat/completions"
             )
          
-        self.model_name = "Qwen/Qwen2.5-VL-7B-Instruct"
-
+        # self.model_name = "OpenGVLab/InternVL2-8B"
+        self.model_name = "microsoft/Phi-3.5-vision-instruct"
         self.declare_parameter('image_topic', '/camera/color/image_raw')
         
         self.decision_topic = self.declare_parameter(
@@ -213,6 +213,18 @@ class ModelOAClient(Node):
     }
         }
     """
+    #     response = requests.post("http://100.123.84.64:8000/v1/chat/completions", json={
+    #     "model": "microsoft/Phi-3.5-vision-instruct",
+    #     "messages": [{"role": "user", "content": [
+    #         {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
+    #         {"type": "text", "text": "What do you see?"}
+    #     ]}],
+    #     "max_tokens": 200,
+    # })
+
+    # print(response.json()["choices"][0]["message"]["content"])
+
+
         payload = {
                 "model": self.model_name,
                 "messages": [

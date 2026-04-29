@@ -12,7 +12,7 @@ def generate_launch_description():
 
     models_arg = DeclareLaunchArgument("models_config", default_value=default_models)
     params_arg = DeclareLaunchArgument("params", default_value=default_params)
-    selected_arg = DeclareLaunchArgument("selected_model", default_value="qwen2_5_vl_7b")
+    selected_arg = DeclareLaunchArgument("selected_model", default_value="llava_ov_0_5b")
 
     node = Node(
         package="vlm_driver",

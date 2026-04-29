@@ -5,7 +5,7 @@ vlm_driver_node:
     # Override of model_root from models.yaml. Empty string means use the value in models.yaml.
     model_root: ""
     # Which key from models.yaml to load on startup.
-    selected_model: qwen2_5_vl_7b
+    selected_model: llama_3_2_vision_11b
     # If true, load model lazily on first inference request instead of at startup.
     lazy_load: false
 
@@ -51,7 +51,7 @@ vlm_driver_node:
       fast: 3.0
 
     # Safety: clamp speed if confidence is below this (0 disables).
-    min_confidence_for_motion: 0.2
+    min_confidence_for_motion: 0.0
 
     # If model output cannot be parsed, command this:
     fallback_steering_label: straight
@@ -64,19 +64,24 @@ vlm_driver_node:
       Return raw JSON only.
       Do not use markdown.
       Do not add explanation outside the JSON.
+
       Allowed steering_label values:
       hard_left, left, slight_left, straight, slight_right, right, hard_right
+
       Allowed speed_label values:
       stop, slow, medium, fast
+
+      Field meanings:
+      - steering_label: the direction to steer based on the image
+      - speed_label: how fast to go based on the image
+      - confidence: your certainty in this action, a number between 0.1 and 1.0.
+        Never return 0.0.
+      - emergency_stop: true only if a collision is imminent in the next second
+      - reason: one short sentence describing what you see (e.g. "clear path ahead")
+
       Rules:
-      - Use emergency_stop=true if there is an immediate collision risk.
-      - If emergency_stop=true, speed_label must be "stop".
-      - confidence must be a number between 0.0 and 1.0.
-      JSON format:
-      {
-        "steering_label": "...",
-        "speed_label": "...",
-        "confidence": 0.0,
-        "emergency_stop": false,
-        "reason": "short reason"
-      }
+      - If emergency_stop is true, speed_label must be "stop".
+      - Do not copy the example values below. Replace every value based on the image.
+
+      Output exactly this JSON shape with your own values:
+      {"steering_label": "<one of the allowed values>", "speed_label": "<one of the allowed values>", "confidence": <0.1 to 1.0>, "emergency_stop": <true or false>, "reason": "<one short sentence>"}

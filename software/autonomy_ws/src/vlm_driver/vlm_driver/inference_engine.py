@@ -183,10 +183,12 @@ class InferenceEngine:
                 **inputs, max_new_tokens=max_new_tokens, do_sample=False,
             )
         dt = time.time() - t0
-        full = self.processor.batch_decode(out_ids, skip_special_tokens=True)[0]
-        if "ASSISTANT:" in full:
-            full = full.split("ASSISTANT:", 1)[-1]
-        return full.strip(), dt
+
+        # Slice off the input portion so we only decode the new tokens.
+        input_len = inputs.input_ids.shape[1]
+        new_tokens = out_ids[0][input_len:]
+        text = self.processor.decode(new_tokens, skip_special_tokens=True).strip()
+        return text, dt
 
     def _run_mllama(self, image, prompt, max_new_tokens):
         import torch
@@ -210,4 +212,9 @@ class InferenceEngine:
                 **inputs, max_new_tokens=max_new_tokens, do_sample=False,
             )
         dt = time.time() - t0
-        return self.processor.decode(out_ids[0], skip_special_tokens=True).strip(), dt
+
+        # Slice off the input portion so we only decode the new tokens.
+        input_len = inputs.input_ids.shape[1]
+        new_tokens = out_ids[0][input_len:]
+        text = self.processor.decode(new_tokens, skip_special_tokens=True).strip()
+        return text, dt

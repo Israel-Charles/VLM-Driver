@@ -57,7 +57,7 @@ class VlmDriverNode(Node):
 
         self.models_config = _get_or("models_config", "")
         self.model_root_override = _get_or("model_root", "")
-        self.selected_model = _get_or("selected_model", "qwen2_5_vl_7b")
+        self.selected_model = _get_or("selected_model", "llama_3_2_vision_11b")
         self.lazy_load = bool(_get_or("lazy_load", False))
         self.image_topic = _get_or("image_topic", "/camera/color/image_raw")
         self.drive_topic = _get_or("drive_topic", "/drive")
@@ -201,7 +201,7 @@ class VlmDriverNode(Node):
                 self._publish_fallback("inference exception")
                 return
 
-            self.get_logger().info(f"latency={latency*1000:.1f} ms raw={raw[:160]}")
+            self.get_logger().info(f"latency={latency*1000:.1f} ms raw={raw[:400]}")
             parsed = parse_json_loose(raw)
             self._publish_from_parsed(parsed, msg.header)
         finally:
@@ -215,11 +215,13 @@ class VlmDriverNode(Node):
             return
         steer_label = str(parsed.get("steering_label", self.fallback_steer))
         speed_label = str(parsed.get("speed_label", self.fallback_speed))
-        emergency = bool(parsed.get("emergency_stop", False))
-        try:
-            confidence = float(parsed.get("confidence", 0.0))
-        except (TypeError, ValueError):
-            confidence = 0.0
+
+        emergency = self._coerce_bool(parsed.get("emergency_stop", False))
+        confidence = self._coerce_float(parsed.get("confidence"), default=0.5)
+
+        # Treat exact 0.0 as "model didn't fill it in" rather than zero confidence
+        if confidence == 0.0:
+            confidence = 0.9999
 
         if emergency:
             speed_label = "stop"
@@ -299,6 +301,26 @@ class VlmDriverNode(Node):
                     f"selected_model param changed to {p.value} (call switch_model to apply)"
                 )
         return SetParametersResult(successful=True)
+
+    @staticmethod
+    def _coerce_bool(val) -> bool:
+        """Handle real bools and string-typed bools that small VLMs love to emit."""
+        if isinstance(val, bool):
+            return val
+        if isinstance(val, (int, float)):
+            return val != 0
+        if isinstance(val, str):
+            return val.strip().lower() in ("true", "1", "yes", "y")
+        return False
+
+    @staticmethod
+    def _coerce_float(val, default: float) -> float:
+        if val is None:
+            return default
+        try:
+            return float(val)  # works for numbers and numeric strings like "0.7"
+        except (TypeError, ValueError):
+            return default
 
 
 def main(args=None):
