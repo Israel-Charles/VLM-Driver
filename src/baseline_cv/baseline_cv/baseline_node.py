@@ -27,6 +27,7 @@ class BaselineCVNode(Node):
         self.declare_parameter('dilate_iterations', 1)
 
         self.declare_parameter('stop_score_threshold', 0.08)
+        self.declare_parameter('near_stop_score_threshold', 0.20)
         self.declare_parameter('blocked_score_threshold', 0.05)
         self.declare_parameter('fast_score_threshold', 0.015)
         self.declare_parameter('medium_score_threshold', 0.04)
@@ -257,15 +258,23 @@ class BaselineCVNode(Node):
         fast_thresh = float(self.get_parameter('fast_score_threshold').value)
         medium_thresh = float(self.get_parameter('medium_score_threshold').value)
 
-        all_blocked = left > blocked_thresh and center > blocked_thresh and right > blocked_thresh
-        center_heavily_blocked = center > stop_thresh
+        near_stop_thresh = float(self.get_parameter('near_stop_score_threshold').value)
 
-        if all_blocked or center_heavily_blocked:
-            if left < right and left < blocked_thresh: #greater number means more obstacles
-                return 'left', 'slow', 0.75, False
-            if right < left and right < blocked_thresh:
-                return 'right', 'slow', 0.75, False
+        near_stop_thresh = float(self.get_parameter('near_stop_score_threshold').value)
+
+        all_blocked = left > blocked_thresh and center > blocked_thresh and right > blocked_thresh
+        center_blocked = center > stop_thresh
+        center_too_close = center > near_stop_thresh
+
+        if center_too_close:
             return 'straight', 'stop', 0.90, True
+
+        if all_blocked or center_blocked:
+            if left < right:
+                return 'left', 'creep', 0.70, False
+            if right < left:
+                return 'right', 'creep', 0.70, False
+            return 'straight', 'creep', 0.60, False
 
         best_sector = min(scores, key=scores.get) #most clear region
         spread = max(scores.values()) - min(scores.values())

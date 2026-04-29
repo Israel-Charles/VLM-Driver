@@ -38,7 +38,7 @@ class ModelOAClient(Node):
         ).value
 
         self.request_period = float(
-            self.declare_parameter("request_period", 1.0).value
+            self.declare_parameter("request_period", 0.5).value
         )
 
         self.resize_width = int(
@@ -84,7 +84,19 @@ class ModelOAClient(Node):
             self.decision_topic,
             10
         )
+        
+        self.overlay_topic = self.declare_parameter(
+            "overlay_topic",
+            "/model_oa/overlay_image"
+        ).value
 
+        self.overlay_pub = self.create_publisher(
+            Image,
+            self.overlay_topic,
+            10
+        )
+
+        self.get_logger().info(f"Publishing model overlay image to {self.overlay_topic}")
         self.get_logger().info(f"Model OA client subscribing to {image_topic}")
         self.get_logger().info(f"Publishing model decisions to {self.decision_topic}")
 
@@ -131,12 +143,149 @@ class ModelOAClient(Node):
             decision_msg.emergency_stop = bool(emergency_stop)
 
             self.decision_pub.publish(decision_msg)
+            reason = decision.get("reason", "")
+
+            overlay_image = self.draw_decision_overlay(
+                cv_image,
+                steering_label,
+                speed_label,
+                confidence,
+                emergency_stop,
+                reason
+            )
+
+            overlay_msg = self.bridge.cv2_to_imgmsg(overlay_image, encoding="bgr8")
+            overlay_msg.header = msg.header
+            self.overlay_pub.publish(overlay_msg)
 
             self.get_logger().info(f"Model OA decision: {decision}")
             self.get_logger().info(f"Model OA Decision msg: {decision_msg}")
 
         except Exception as e:
             self.get_logger().error(f"Model OA request failed: {e}")
+    
+    def draw_decision_overlay(
+        self,
+        cv_image,
+        steering_label,
+        speed_label,
+        confidence,
+        emergency_stop,
+        reason=""
+    ):
+        overlay = cv_image.copy()
+        h, w = overlay.shape[:2]
+
+        # Draw left / center / right visual regions, similar to baseline CV
+        cv2.line(overlay, (w // 3, 0), (w // 3, h), (255, 255, 0), 2)
+        cv2.line(overlay, (2 * w // 3, 0), (2 * w // 3, h), (255, 255, 0), 2)
+
+        cv2.putText(
+            overlay,
+            "LEFT",
+            (30, 40),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1.0,
+            (255, 255, 0),
+            2
+        )
+
+        cv2.putText(
+            overlay,
+            "CENTER",
+            (w // 3 + 30, 40),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1.0,
+            (255, 255, 0),
+            2
+        )
+
+        cv2.putText(
+            overlay,
+            "RIGHT",
+            (2 * w // 3 + 30, 40),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1.0,
+            (255, 255, 0),
+            2
+        )
+
+        # Decision panel
+        panel_h = 150
+        cv2.rectangle(overlay, (0, 0), (w, panel_h), (0, 0, 0), -1)
+
+        status_color = (0, 0, 255) if emergency_stop else (0, 255, 0)
+
+        cv2.putText(
+            overlay,
+            f"MODEL OA",
+            (20, 35),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1.0,
+            status_color,
+            2
+        )
+
+        cv2.putText(
+            overlay,
+            f"Steering: {steering_label}",
+            (20, 75),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.8,
+            (255, 255, 255),
+            2
+        )
+
+        cv2.putText(
+            overlay,
+            f"Speed: {speed_label} | Conf: {confidence:.2f}",
+            (20, 110),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.8,
+            (255, 255, 255),
+            2
+        )
+
+        cv2.putText(
+            overlay,
+            f"Emergency Stop: {emergency_stop}",
+            (20, 145),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.75,
+            status_color,
+            2
+        )
+
+        # Steering arrow
+        steering_deg = self.steering_map_deg.get(steering_label, 0.0)
+
+        start_point = (w // 2, h - 40)
+
+        # Positive steering means left in your map, so x moves left
+        dx = int(-(steering_deg / 40.0) * (w * 0.35))
+        end_point = (w // 2 + dx, int(h * 0.55))
+
+        cv2.arrowedLine(
+            overlay,
+            start_point,
+            end_point,
+            status_color,
+            6,
+            tipLength=0.25
+        )
+
+        if reason:
+            cv2.putText(
+                overlay,
+                f"Reason: {reason[:70]}",
+                (20, h - 15),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.65,
+                (255, 255, 255),
+                2
+            )
+
+        return overlay
 
     def cv_image_to_base64_jpeg(self, cv_image):
         h, w = cv_image.shape[:2]
