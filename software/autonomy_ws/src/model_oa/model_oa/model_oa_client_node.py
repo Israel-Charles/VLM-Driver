@@ -30,7 +30,7 @@ class ModelOAClient(Node):
          
         self.model_name = "Qwen/Qwen2.5-VL-7B-Instruct"
 
-        self.declare_parameter('image_topic', '/camera/camera/color/image_raw')
+        self.declare_parameter('image_topic', '/camera/color/image_raw')
         
         self.decision_topic = self.declare_parameter(
             "decision_topic",
@@ -38,8 +38,15 @@ class ModelOAClient(Node):
         ).value
 
         self.request_period = float(
-            self.declare_parameter("request_period", 1.0).value
+        self.declare_parameter("request_period", 1.0).value
         )
+
+
+        # self.request_period = float(
+        #     # self.declare_parameter("request_period", 1.0).value
+        #     self.declare_parameter('image_topic', '/camera/camera/color/image_raw')
+
+        # )
 
         self.resize_width = int(
             self.declare_parameter("resize_width", 640).value
