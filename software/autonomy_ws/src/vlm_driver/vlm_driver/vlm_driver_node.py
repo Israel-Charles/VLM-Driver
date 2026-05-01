@@ -28,6 +28,7 @@ from .inference_engine import InferenceEngine
 
 
 def parse_json_loose(text: str):
+    """Parse JSON directly, or pull out the first JSON-looking object."""
     try:
         return json.loads(text)
     except json.JSONDecodeError:
@@ -42,7 +43,10 @@ def parse_json_loose(text: str):
 
 
 class VlmDriverNode(Node):
+    """ROS 2 node that runs local VLM inference and publishes drive commands."""
+
     def __init__(self):
+        """Read parameters, set up ROS interfaces, and optionally load the model."""
         super().__init__(
             "vlm_driver_node",
             allow_undeclared_parameters=True,
@@ -51,6 +55,7 @@ class VlmDriverNode(Node):
 
         # ---- read params (auto-declared from YAML + launch overrides) ----
         def _get_or(name, default):
+            """Read a declared parameter or return the fallback value."""
             if self.has_parameter(name):
                 return self.get_parameter(name).value
             return default
@@ -140,6 +145,7 @@ class VlmDriverNode(Node):
         return out
 
     def _load_selected(self):
+        """Load the currently selected model, downloading it first if needed."""
         entry = self.registry.get(self.selected_model)
         local = entry.local_dir(self.registry.model_root)
         # Auto-download if the user forgot to run download_models first.
@@ -159,6 +165,7 @@ class VlmDriverNode(Node):
     # ---------- ROS callbacks ----------
 
     def _on_image(self, msg: Image):
+        """Store the newest image for the timer-driven inference loop."""
         if self.drop_stale:
             with self._latest_lock:
                 self._latest_msg = msg
@@ -169,6 +176,7 @@ class VlmDriverNode(Node):
                     self._latest_msg = msg
 
     def _tick(self):
+        """Run one inference cycle if a frame is waiting and the model is free."""
         # Skip if a previous inference is still running
         if not self._infer_lock.acquire(blocking=False):
             return
@@ -210,6 +218,7 @@ class VlmDriverNode(Node):
     # ---------- publishing ----------
 
     def _publish_from_parsed(self, parsed, header):
+        """Turn parsed model JSON into a drive command."""
         if not isinstance(parsed, dict):
             self._publish_fallback("unparsable output", header)
             return
@@ -242,12 +251,14 @@ class VlmDriverNode(Node):
         self._publish(steering_deg, speed_mps, header)
 
     def _publish_fallback(self, reason, header=None):
+        """Publish the configured fallback command when inference is unsafe."""
         self.get_logger().warn(f"publishing fallback: {reason}")
         steer_deg = self.steering_map_deg.get(self.fallback_steer, 0.0)
         speed_mps = self.speed_map_mps.get(self.fallback_speed, 0.0)
         self._publish(steer_deg, speed_mps, header)
 
     def _publish(self, steering_deg, speed_mps, header):
+        """Publish one Ackermann drive command."""
         out = AckermannDriveStamped()
         if header is not None:
             out.header = header
@@ -261,6 +272,7 @@ class VlmDriverNode(Node):
     # ---------- services ----------
 
     def _srv_load(self, _req, resp):
+        """Service callback that loads the selected model."""
         try:
             self._load_selected()
             resp.success = True
@@ -271,6 +283,7 @@ class VlmDriverNode(Node):
         return resp
 
     def _srv_unload(self, _req, resp):
+        """Service callback that unloads the active model."""
         try:
             self.engine.unload()
             resp.success = True
@@ -281,6 +294,7 @@ class VlmDriverNode(Node):
         return resp
 
     def _srv_switch(self, _req, resp):
+        """Service callback that reloads using the current selected_model parameter."""
         # Reads current selected_model param and (re)loads it.
         self.selected_model = self.get_parameter("selected_model") \
             .get_parameter_value().string_value
@@ -294,6 +308,7 @@ class VlmDriverNode(Node):
         return resp
 
     def _on_param_change(self, params):
+        """Note selected_model parameter changes without loading immediately."""
         from rcl_interfaces.msg import SetParametersResult
         for p in params:
             if p.name == "selected_model" and p.value != self.selected_model:
@@ -315,6 +330,7 @@ class VlmDriverNode(Node):
 
     @staticmethod
     def _coerce_float(val, default: float) -> float:
+        """Convert model output into a float, using a default if it fails."""
         if val is None:
             return default
         try:
@@ -324,6 +340,7 @@ class VlmDriverNode(Node):
 
 
 def main(args=None):
+    """Start the VLM driver node."""
     rclpy.init(args=args)
     node = VlmDriverNode()
     try:

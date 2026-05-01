@@ -5,6 +5,8 @@
 # stop it with:
 # modal app stop example-sglang-low-latency
 ####
+"""Modal app that serves the vision-language model through an SGLang endpoint."""
+
 import asyncio
 import json
 import subprocess
@@ -43,6 +45,7 @@ DG_CACHE_PATH = "/root/.cache/deepgemm"
 sglang_image = sglang_image.env({"SGLANG_ENABLE_JIT_DEEPGEMM": "1"})
 
 def compile_deep_gemm():
+    """Compile DeepGEMM kernels during image setup when that path is enabled."""
     import os
 
     if int(os.environ.get("SGLANG_ENABLE_JIT_DEEPGEMM", "1")):
@@ -67,6 +70,7 @@ with sglang_image.imports():
 
 
 def wait_ready(process: subprocess.Popen, timeout: int = 10 * MINUTES):
+    """Wait until the local SGLang server answers its health endpoint."""
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
@@ -83,11 +87,13 @@ def wait_ready(process: subprocess.Popen, timeout: int = 10 * MINUTES):
 
 
 def check_running(p: subprocess.Popen):
+    """Raise an error if the server process already exited."""
     if (rc := p.poll()) is not None:
         raise subprocess.CalledProcessError(rc, cmd=p.args)
 
 
 def warmup():
+    """Send a few tiny requests so the model is ready before real traffic arrives."""
     payload = {
         "messages": [{"role": "user", "content": "Hello, how are you?"}],
         "max_tokens": 16,
@@ -116,6 +122,8 @@ PORT = 8000
 )
 @modal.concurrent(target_inputs=TARGET_INPUTS)
 class SGLang:
+    """Modal class that owns one SGLang server process."""
+
     @modal.enter()
     def startup(self):
         """Start the SGLang server and block until it is healthy, then warm it up and put it to sleep."""
@@ -152,6 +160,7 @@ class SGLang:
 
     @modal.exit()
     def stop(self):
+        """Stop the SGLang process when Modal shuts the container down."""
         self.process.terminate()
 
 

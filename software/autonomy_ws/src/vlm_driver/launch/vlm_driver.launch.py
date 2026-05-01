@@ -1,3 +1,5 @@
+"""Launch the VLM driver node with model registry and runtime parameters."""
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
@@ -6,6 +8,7 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
+    """Create the launch description for the VLM driver node."""
     pkg = FindPackageShare("vlm_driver")
     default_models = PathJoinSubstitution([pkg, "config", "models.yaml"])
     default_params = PathJoinSubstitution([pkg, "config", "vlm_driver.yaml"])

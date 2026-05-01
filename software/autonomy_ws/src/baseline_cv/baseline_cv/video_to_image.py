@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Read frames from a video file and publish them as ROS Image messages."""
 
 import cv2
 import rclpy
@@ -8,7 +9,10 @@ from cv_bridge import CvBridge
 
 
 class VideoToImagePublisher(Node):
+    """Turn a saved video into a camera-like image stream."""
+
     def __init__(self):
+        """Open the video file and publish frames at the video's FPS."""
         super().__init__("video_to_image_publisher")
 
         self.declare_parameter("video_path", "")
@@ -42,6 +46,7 @@ class VideoToImagePublisher(Node):
         self.get_logger().info(f"Video FPS: {fps}")
 
     def publish_frame(self):
+        """Publish one video frame, looping back if requested."""
         ret, frame = self.cap.read()
 
         if not ret:
@@ -61,6 +66,7 @@ class VideoToImagePublisher(Node):
 
 
 def main(args=None):
+    """Start the video-to-image publisher."""
     rclpy.init(args=args)
     node = VideoToImagePublisher()
     rclpy.spin(node)

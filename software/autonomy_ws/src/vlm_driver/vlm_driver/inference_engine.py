@@ -10,6 +10,7 @@ from PIL import Image
 
 
 def _select_dtype_and_device():
+    """Pick a torch dtype and device map based on CUDA availability."""
     import torch
     if torch.cuda.is_available():
         return torch.bfloat16, "auto"
@@ -17,7 +18,10 @@ def _select_dtype_and_device():
 
 
 class InferenceEngine:
+    """Load one local VLM family at a time and run image-text inference."""
+
     def __init__(self):
+        """Start with no model loaded."""
         self.model = None
         self.processor = None
         self.family: Optional[str] = None
@@ -26,9 +30,11 @@ class InferenceEngine:
     # -------- lifecycle --------
 
     def is_loaded(self) -> bool:
+        """Return true when a model object is currently loaded."""
         return self.model is not None
 
     def load(self, family: str, local_path: Path) -> None:
+        """Load the selected model family from disk."""
         if self.is_loaded():
             self.unload()
 
@@ -101,6 +107,7 @@ class InferenceEngine:
         self.local_path = local_path
 
     def unload(self) -> None:
+        """Drop the model and clear GPU cache when possible."""
         self.model = None
         self.processor = None
         self.family = None
@@ -130,6 +137,7 @@ class InferenceEngine:
         raise ValueError(f"Unknown family: {self.family}")
 
     def _run_qwen(self, image, prompt, max_new_tokens):
+        """Run inference for Qwen-VL style processors."""
         import torch
         # Pass the PIL image directly; qwen-vl-utils is path-oriented.
         messages = [{
@@ -162,6 +170,7 @@ class InferenceEngine:
         return text_out, dt
 
     def _run_llava_like(self, image, prompt, max_new_tokens):
+        """Run inference for LLaVA and LLaVA-OneVision style processors."""
         import torch
         conversation = [{
             "role": "user",
@@ -191,6 +200,7 @@ class InferenceEngine:
         return text, dt
 
     def _run_mllama(self, image, prompt, max_new_tokens):
+        """Run inference for Mllama-style processors."""
         import torch
         messages = [{
             "role": "user",

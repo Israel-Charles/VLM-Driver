@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Publish simple synthetic camera frames for testing the baseline CV node."""
 
 import rclpy
 import cv2
@@ -10,7 +11,10 @@ from cv_bridge import CvBridge
 
 
 class FakeCameraPublisher(Node):
+    """Make fake obstacle scenes and publish them like a camera topic."""
+
     def __init__(self):
+        """Create the publisher and start a timer that cycles through scenes."""
         super().__init__('fake_camera_publisher')
 
         self.pub = self.create_publisher(Image, '/camera/camera/color/image_raw', 10)
@@ -25,6 +29,7 @@ class FakeCameraPublisher(Node):
         self.get_logger().info('Fake camera publisher started.')
 
     def make_base_frame(self):
+        """Create a blank frame with a small floor reference line."""
         # Dark background so synthetic obstacles stand out
         frame = np.zeros((self.height, self.width, 3), dtype=np.uint8)
 
@@ -33,10 +38,12 @@ class FakeCameraPublisher(Node):
         return frame
 
     def add_obstacle(self, frame, x1, y1, x2, y2):
+        """Draw one rectangular obstacle on the fake camera image."""
         # White rectangle = strong edges for Canny
         cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 255, 255), -1)
 
     def publish_test_frame(self):
+        """Publish the next obstacle layout in the test cycle."""
         frame = self.make_base_frame()
         label = ""
 
@@ -80,6 +87,7 @@ class FakeCameraPublisher(Node):
 
 
 def main(args=None):
+    """Start the fake camera publisher."""
     rclpy.init(args=args)
     node = FakeCameraPublisher()
     try:

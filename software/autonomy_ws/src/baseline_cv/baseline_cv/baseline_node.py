@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Baseline ROS 2 computer-vision node for simple obstacle avoidance."""
 
 import time
 from typing import Dict, Tuple
@@ -14,7 +15,10 @@ from vlm_driver_msgs.msg import DrivingDecisions, PipelineMetrics
 
 
 class BaselineCVNode(Node):
+    """Process camera images and publish baseline driving decisions."""
+
     def __init__(self) -> None:
+        """Initialize subscriptions, publishers, parameters, and node state."""
         super().__init__('baseline_cv_node')
 
         self.bridge = CvBridge() #library to conver ros msgs to opencv 
@@ -92,6 +96,7 @@ class BaselineCVNode(Node):
         self.get_logger().info('Baseline CV node started.')
 
     def image_callback(self, msg: Image) -> None:
+        """Handle one camera frame, publish a decision, and emit debug outputs."""
         total_start = time.perf_counter()
 
         try:
@@ -236,6 +241,7 @@ class BaselineCVNode(Node):
         right = mask[:, 2 * third:]
 
         def score(region: np.ndarray) -> float:
+            """Return the fraction of obstacle pixels in one sector."""
             total_pixels = float(region.size)
             if total_pixels == 0:
                 return 1.0
@@ -248,6 +254,7 @@ class BaselineCVNode(Node):
         }
 
     def make_decision(self, scores: Dict[str, float]) -> Tuple[str, str, float, bool]:
+        """Choose steering, speed, confidence, and emergency-stop state from sector scores."""
         left = scores['left']
         center = scores['center']
         right = scores['right']
@@ -352,6 +359,7 @@ class BaselineCVNode(Node):
         confidence: float,
         emergency_stop: bool,
     ) -> np.ndarray:
+        """Draw ROI boundaries, sector scores, command text, and mask preview."""
         overlay = frame.copy()
         h, w, _ = frame.shape
         roi_h, roi_w, _ = roi.shape
@@ -398,6 +406,7 @@ class BaselineCVNode(Node):
 
 
 def main(args=None) -> None:
+    """Start the baseline CV node."""
     rclpy.init(args=args)
     node = BaselineCVNode()
     try:

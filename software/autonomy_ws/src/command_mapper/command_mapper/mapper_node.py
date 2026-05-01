@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Map high-level driving decisions into Ackermann drive commands."""
 
 import math
 from typing import Dict
@@ -16,6 +17,7 @@ class CommandMapperNode(Node):
     subcribing to /baseline/decision and publishing to /vehicle/ackermann_cmd"""
 
     def __init__(self) -> None:
+        """Set up the ROS topics and the label-to-number maps."""
         super().__init__('command_mapper_node')
 
         self.declare_parameter('decision_topic1', '/baseline/decision')
@@ -67,6 +69,7 @@ class CommandMapperNode(Node):
         self.get_logger().info('Command mapper node started.')
 
     def decision_callback(self, msg: DrivingDecisions) -> None:
+        """Convert one DrivingDecisions message into an Ackermann command."""
         steering_deg = msg.steering_deg #starts from values in the msg field
         speed_mps = msg.speed_mps
 
@@ -94,6 +97,7 @@ class CommandMapperNode(Node):
 
 
 def main(args=None) -> None:
+    """Start the command mapper node."""
     rclpy.init(args=args)
     node = CommandMapperNode()
     try:

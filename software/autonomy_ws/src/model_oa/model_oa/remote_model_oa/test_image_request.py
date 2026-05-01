@@ -1,3 +1,5 @@
+"""Small image request to check that the remote model handles vision input."""
+
 import requests
 import json
 

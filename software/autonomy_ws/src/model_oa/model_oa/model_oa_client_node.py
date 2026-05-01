@@ -1,3 +1,5 @@
+"""ROS client node that asks a remote vision-language model for driving decisions."""
+
 import base64
 import json
 import os
@@ -16,7 +18,10 @@ from vlm_driver_msgs.msg import DrivingDecisions, PipelineMetrics
 
 
 class ModelOAClient(Node):
+    """Send camera frames to the remote model and publish its driving decision."""
+
     def __init__(self) -> None:
+        """Set up model settings, ROS topics, and timing state."""
         super().__init__('model_oa_client')
 
         self.bridge = CvBridge() #library to conver ros msgs to opencv 
@@ -97,6 +102,7 @@ class ModelOAClient(Node):
 
   
     def image_callback(self, msg: Image) -> None:
+        """Throttle camera frames, call the model, and publish the model decision."""
         now = time.time()
 
         # Do not call the remote VLM at camera FPS.
@@ -146,6 +152,7 @@ class ModelOAClient(Node):
             self.get_logger().error(f"Model OA request failed: {e}")
 
     def cv_image_to_base64_jpeg(self, cv_image):
+        """Resize and JPEG-encode an OpenCV image for the model request."""
         h, w = cv_image.shape[:2]
 
         if self.resize_width > 0 and w > self.resize_width:
@@ -166,6 +173,7 @@ class ModelOAClient(Node):
         return base64.b64encode(buffer).decode("utf-8")
     
     def clean_model_json(self, content: str) -> str:
+        """Remove markdown fences if the model wraps the JSON anyway."""
         content = content.strip()
 
         if content.startswith("```json"):
@@ -180,6 +188,7 @@ class ModelOAClient(Node):
         return content
 
     def call_model(self, jpeg_b64):
+        """Send one image to the model endpoint and parse the JSON decision."""
         image_data_url = f"data:image/jpeg;base64,{jpeg_b64}"
 
         prompt = """
@@ -269,6 +278,7 @@ class ModelOAClient(Node):
             return content
 
 def main(args=None) -> None:
+    """Start the model OA client node."""
     rclpy.init(args=args)
     node = ModelOAClient()
     try:

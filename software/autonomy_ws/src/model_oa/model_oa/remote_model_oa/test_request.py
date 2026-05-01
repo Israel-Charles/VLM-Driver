@@ -1,3 +1,5 @@
+"""Small text-only request to check that the remote model endpoint responds."""
+
 import requests
 import json
 

@@ -16,6 +16,7 @@ from .model_registry import (
 
 
 def ensure_one(repo_id: str, local_dir: Path, token):
+    """Download one model if it is not already present on disk."""
     local_dir.mkdir(parents=True, exist_ok=True)
     if (local_dir / "config.json").is_file():
         print(f"[cache] already present: {repo_id} -> {local_dir}")
@@ -26,6 +27,7 @@ def ensure_one(repo_id: str, local_dir: Path, token):
 
 
 def main(argv=None):
+    """Download the enabled models listed in a registry YAML file."""
     p = argparse.ArgumentParser(description="Download VLMs listed in a registry YAML.")
     p.add_argument("--config", required=True, help="Path to models.yaml")
     p.add_argument("--model-root", default="", help="Override model_root from YAML")

@@ -12,6 +12,8 @@ import yaml
 
 @dataclass
 class ModelEntry:
+    """One configured model and the local folder where it should live."""
+
     key: str
     repo_id: str
     subfolder: str
@@ -19,15 +21,19 @@ class ModelEntry:
     enabled: bool
 
     def local_dir(self, model_root: Path) -> Path:
+        """Return the local path for this model under the configured root."""
         return model_root / self.subfolder
 
 
 @dataclass
 class Registry:
+    """Loaded registry of known model keys and their metadata."""
+
     model_root: Path
     models: Dict[str, ModelEntry]
 
     def get(self, key: str) -> ModelEntry:
+        """Look up one model entry by key."""
         if key not in self.models:
             raise KeyError(
                 f"Model key '{key}' not found in registry. "
@@ -37,6 +43,7 @@ class Registry:
 
 
 def load_registry(yaml_path: str, model_root_override: str = "") -> Registry:
+    """Load models.yaml and return a registry object."""
     with open(yaml_path, "r") as f:
         data = yaml.safe_load(f)
 
@@ -85,6 +92,7 @@ def resolve_hf_token(explicit: str = "") -> Optional[str]:
 
 
 def enable_hf_transfer_if_available() -> None:
+    """Enable the faster Hugging Face transfer backend when it is installed."""
     try:
         import hf_transfer  # noqa: F401
         os.environ.setdefault("HF_HUB_ENABLE_HF_TRANSFER", "1")
