@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Read frames from a video file and publish them as ROS Image messages."""
 
 import cv2
 import rclpy
@@ -8,9 +9,13 @@ from cv_bridge import CvBridge
 
 
 class VideoToImagePublisher(Node):
+    """Turn a saved video into a camera-like image stream."""
+
     def __init__(self):
+        """Open the video file and publish frames at the video's FPS."""
         super().__init__("video_to_image_publisher")
 
+        # Parameters make it easy to swap videos or remap the output topic from launch.
         self.declare_parameter("video_path", "")
         self.declare_parameter("image_topic", "/camera/camera/color/image_raw")
         self.declare_parameter("frame_id", "camera_color_optical_frame")
@@ -24,6 +29,7 @@ class VideoToImagePublisher(Node):
         if self.video_path == "":
             raise RuntimeError("Please provide video_path:=/path/to/video.mp4")
 
+        # OpenCV reads the video from disk one frame at a time.
         self.cap = cv2.VideoCapture(self.video_path)
 
         if not self.cap.isOpened():
@@ -36,12 +42,14 @@ class VideoToImagePublisher(Node):
         if fps <= 0:
             fps = 30.0
 
+        # The timer rate follows the source video so playback feels natural.
         self.timer = self.create_timer(1.0 / fps, self.publish_frame)
 
         self.get_logger().info(f"Publishing video frames on: {self.image_topic}")
         self.get_logger().info(f"Video FPS: {fps}")
 
     def publish_frame(self):
+        """Publish one video frame, looping back if requested."""
         ret, frame = self.cap.read()
 
         if not ret:
@@ -53,6 +61,7 @@ class VideoToImagePublisher(Node):
                 self.get_logger().info("Video finished")
                 return
 
+        # Stamp the image so downstream nodes receive a normal camera-like message.
         msg = self.bridge.cv2_to_imgmsg(frame, encoding="bgr8")
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = self.frame_id
@@ -61,6 +70,7 @@ class VideoToImagePublisher(Node):
 
 
 def main(args=None):
+    """Start the video-to-image publisher."""
     rclpy.init(args=args)
     node = VideoToImagePublisher()
     rclpy.spin(node)

@@ -5,6 +5,8 @@
 # stop it with:
 # modal app stop example-sglang-low-latency
 ####
+"""Modal app that serves the vision-language model through an SGLang endpoint."""
+
 import asyncio
 import json
 import subprocess
@@ -16,6 +18,7 @@ import modal.experimental
 
 MINUTES = 60  # seconds
 
+# Start from the SGLang runtime image so the server has the right CUDA/model stack.
 sglang_image = modal.Image.from_registry(
     "lmsysorg/sglang:v0.5.9-cu129-amd64-runtime"
 ).entrypoint(
@@ -25,11 +28,13 @@ sglang_image = modal.Image.from_registry(
 GPU_TYPE, N_GPUS = "A10G", 1
 GPU = f"{GPU_TYPE}:{N_GPUS}"
 
+# The ROS client asks this served model for driving decisions.
 MODEL_NAME = "Qwen/Qwen2.5-VL-7B-Instruct"
 MODEL_REVISION = ( 
     "main" 
 )
 
+# Keep model weights and compile artifacts in Modal volumes so cold starts are faster.
 HF_CACHE_VOL = modal.Volume.from_name("huggingface-cache", create_if_missing=True)
 HF_CACHE_PATH = "/root/.cache/huggingface"
 MODEL_PATH = f"{HF_CACHE_PATH}/{MODEL_NAME}"
@@ -43,6 +48,7 @@ DG_CACHE_PATH = "/root/.cache/deepgemm"
 sglang_image = sglang_image.env({"SGLANG_ENABLE_JIT_DEEPGEMM": "1"})
 
 def compile_deep_gemm():
+    """Compile DeepGEMM kernels during image setup when that path is enabled."""
     import os
 
     if int(os.environ.get("SGLANG_ENABLE_JIT_DEEPGEMM", "1")):
@@ -62,11 +68,13 @@ REGION = "us-east"
 MIN_CONTAINERS = 1  # set to 1 to ensure one replica is always ready
 TARGET_INPUTS = 10
 
+# Import requests inside the Modal image so health checks run in the container.
 with sglang_image.imports():
     import requests
 
 
 def wait_ready(process: subprocess.Popen, timeout: int = 10 * MINUTES):
+    """Wait until the local SGLang server answers its health endpoint."""
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
@@ -83,11 +91,13 @@ def wait_ready(process: subprocess.Popen, timeout: int = 10 * MINUTES):
 
 
 def check_running(p: subprocess.Popen):
+    """Raise an error if the server process already exited."""
     if (rc := p.poll()) is not None:
         raise subprocess.CalledProcessError(rc, cmd=p.args)
 
 
 def warmup():
+    """Send a few tiny requests so the model is ready before real traffic arrives."""
     payload = {
         "messages": [{"role": "user", "content": "Hello, how are you?"}],
         "max_tokens": 16,
@@ -116,6 +126,8 @@ PORT = 8000
 )
 @modal.concurrent(target_inputs=TARGET_INPUTS)
 class SGLang:
+    """Modal class that owns one SGLang server process."""
+
     @modal.enter()
     def startup(self):
         """Start the SGLang server and block until it is healthy, then warm it up and put it to sleep."""
@@ -146,12 +158,14 @@ class SGLang:
 
         
 
+        # Keep the launched server process so the exit hook can terminate it later.
         self.process = subprocess.Popen(cmd)
         wait_ready(self.process)
         warmup()
 
     @modal.exit()
     def stop(self):
+        """Stop the SGLang process when Modal shuts the container down."""
         self.process.terminate()
 
 

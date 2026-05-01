@@ -1,3 +1,5 @@
+"""ROS client node that asks a remote vision-language model for driving decisions."""
+
 import base64
 import json
 import os
@@ -16,11 +18,16 @@ from vlm_driver_msgs.msg import DrivingDecisions, PipelineMetrics
 
 
 class ModelOAClient(Node):
+    """Send camera frames to the remote model and publish its driving decision."""
+
     def __init__(self) -> None:
+        """Set up model settings, ROS topics, and debug overlay publishing."""
         super().__init__('model_oa_client')
 
+        # CvBridge handles conversion between ROS Image messages and OpenCV arrays.
         self.bridge = CvBridge() #library to conver ros msgs to opencv 
 
+        # The model endpoint is kept in the environment so it is not hard-coded into launch files.
         self.model_url=os.environ.get('MODEL_OA_URL', "")
         if not self.model_url:
             self.get_logger().error(
@@ -30,6 +37,7 @@ class ModelOAClient(Node):
          
         self.model_name = "Qwen/Qwen2.5-VL-7B-Instruct"
 
+        # Parameters keep the camera topic and model request settings easy to tune.
         self.declare_parameter('image_topic', '/camera/camera/color/image_raw')
         
         self.decision_topic = self.declare_parameter(
@@ -55,6 +63,7 @@ class ModelOAClient(Node):
 
         
         #driving decision map
+        # Convert model steering labels into numeric angles for downstream nodes.
         self.steering_map_deg: Dict[str, float] = {
             'hard_left': 40.0,
             'left': 25.0,
@@ -65,6 +74,7 @@ class ModelOAClient(Node):
             'hard_right': -40.0,
         }
 
+        # Convert model speed labels into meters per second.
         self.speed_map_mps: Dict[str, float] = {
             'stop': 0.0,
             'slow': 2.0,
@@ -72,6 +82,7 @@ class ModelOAClient(Node):
             'fast': 5.0,
         }
 
+        # Subscribe to the camera stream that will be sampled for model requests.
         self.image_sub = self.create_subscription(
             Image,
             image_topic,
@@ -79,6 +90,7 @@ class ModelOAClient(Node):
             10
         )
 
+        # Publish the structured decision that the mapper node can consume.
         self.decision_pub = self.create_publisher(
             DrivingDecisions,
             self.decision_topic,
@@ -90,6 +102,7 @@ class ModelOAClient(Node):
             "/model_oa/overlay_image"
         ).value
 
+        # Overlay images are useful for seeing what the model decided on each request.
         self.overlay_pub = self.create_publisher(
             Image,
             self.overlay_topic,
@@ -102,6 +115,7 @@ class ModelOAClient(Node):
 
   
     def image_callback(self, msg: Image) -> None:
+        """Throttle camera frames, call the model, and publish the model decision."""
         now = time.time()
 
         # Do not call the remote VLM at camera FPS.
@@ -111,9 +125,11 @@ class ModelOAClient(Node):
         self.last_request_time = now
 
         try:
+            # Convert the ROS image into a small JPEG payload for the HTTP request.
             cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
             jpeg_b64 = self.cv_image_to_base64_jpeg(cv_image)
 
+            # Ask the model for a driving decision in JSON form.
             decision = self.call_model(jpeg_b64)
 
             steering_label= decision.get('steering_label')
@@ -121,6 +137,7 @@ class ModelOAClient(Node):
             emergency_stop=decision.get('emergency_stop')
             confidence=decision.get('confidence')
 
+            # Fall back to safe labels if the model returns something outside the expected set.
             if steering_label not in self.steering_map_deg:
                 self.get_logger().warn(f'Invalid steering label from model {steering_label}')
                 steering_label='straight'
@@ -132,6 +149,7 @@ class ModelOAClient(Node):
             if (emergency_stop):
                 speed_label='stop'
 
+            # Package the model output into the same decision message used by the baseline.
             decision_msg = DrivingDecisions()
             decision_msg.header = msg.header
             decision_msg.source = "model_oa"
@@ -145,6 +163,7 @@ class ModelOAClient(Node):
             self.decision_pub.publish(decision_msg)
             reason = decision.get("reason", "")
 
+            # Draw a debug image so the model choice can be checked visually.
             overlay_image = self.draw_decision_overlay(
                 cv_image,
                 steering_label,
@@ -173,6 +192,7 @@ class ModelOAClient(Node):
         emergency_stop,
         reason=""
     ):
+        """Draw the model's selected command and steering direction on the frame."""
         overlay = cv_image.copy()
         h, w = overlay.shape[:2]
 
@@ -214,6 +234,7 @@ class ModelOAClient(Node):
         panel_h = 150
         cv2.rectangle(overlay, (0, 0), (w, panel_h), (0, 0, 0), -1)
 
+        # Red means stop condition, green means the model thinks it can keep moving.
         status_color = (0, 0, 255) if emergency_stop else (0, 255, 0)
 
         cv2.putText(
@@ -259,6 +280,7 @@ class ModelOAClient(Node):
         # Steering arrow
         steering_deg = self.steering_map_deg.get(steering_label, 0.0)
 
+        # Start near the bottom middle so the arrow looks like the vehicle's next motion.
         start_point = (w // 2, h - 40)
 
         # Positive steering means left in your map, so x moves left
@@ -275,6 +297,7 @@ class ModelOAClient(Node):
         )
 
         if reason:
+            # Keep the reason short enough that it stays on one visible line.
             cv2.putText(
                 overlay,
                 f"Reason: {reason[:70]}",
@@ -288,8 +311,10 @@ class ModelOAClient(Node):
         return overlay
 
     def cv_image_to_base64_jpeg(self, cv_image):
+        """Resize and JPEG-encode an OpenCV image for the model request."""
         h, w = cv_image.shape[:2]
 
+        # Shrinking wide frames keeps the remote request lighter and faster.
         if self.resize_width > 0 and w > self.resize_width:
             scale = self.resize_width / float(w)
             new_h = int(h * scale)
@@ -308,8 +333,10 @@ class ModelOAClient(Node):
         return base64.b64encode(buffer).decode("utf-8")
     
     def clean_model_json(self, content: str) -> str:
+        """Remove markdown fences if the model wraps the JSON anyway."""
         content = content.strip()
 
+        # The prompt asks for raw JSON, but this protects against common markdown output.
         if content.startswith("```json"):
             content = content.replace("```json", "", 1).strip()
 
@@ -322,8 +349,10 @@ class ModelOAClient(Node):
         return content
 
     def call_model(self, jpeg_b64):
+        """Send one image to the model endpoint and parse the JSON decision."""
         image_data_url = f"data:image/jpeg;base64,{jpeg_b64}"
 
+        # The prompt keeps the output small and easy for this node to parse.
         prompt = """
     You are the obstacle avoidance model for a small autonomous vehicle.
 
@@ -378,6 +407,7 @@ class ModelOAClient(Node):
             "max_tokens": 128
         }
 
+        # This endpoint is OpenAI-compatible, so the request uses chat completions format.
         response = requests.post(
             self.model_url,
             json=payload,
@@ -392,6 +422,7 @@ class ModelOAClient(Node):
 
       
         try:
+            # Return a dict when the model followed the JSON instruction.
             parsed = json.loads(cleaned)
             return parsed
         except json.JSONDecodeError:
@@ -399,6 +430,7 @@ class ModelOAClient(Node):
             return content
 
 def main(args=None) -> None:
+    """Start the model OA client node."""
     rclpy.init(args=args)
     node = ModelOAClient()
     try:

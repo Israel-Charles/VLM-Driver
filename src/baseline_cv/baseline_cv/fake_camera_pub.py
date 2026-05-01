@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Publish simple synthetic camera frames for testing the baseline CV node."""
 
 import rclpy
 import cv2
@@ -10,21 +11,28 @@ from cv_bridge import CvBridge
 
 
 class FakeCameraPublisher(Node):
+    """Make fake obstacle scenes and publish them like a camera topic."""
+
     def __init__(self):
+        """Create the publisher and start a timer that cycles through scenes."""
         super().__init__('fake_camera_publisher')
 
+        # Publish to the same topic name that the baseline CV node listens to.
         self.pub = self.create_publisher(Image, '/camera/camera/color/image_raw', 10)
         self.bridge = CvBridge()
 
+        # Each timer tick publishes the next test frame in the sequence.
         self.timer = self.create_timer(1.0, self.publish_test_frame)
         self.step = 0
 
+        # Keep the fake image size close to a normal camera stream.
         self.width = 640
         self.height = 480
 
         self.get_logger().info('Fake camera publisher started.')
 
     def make_base_frame(self):
+        """Create a blank frame with a small floor reference line."""
         # Dark background so synthetic obstacles stand out
         frame = np.zeros((self.height, self.width, 3), dtype=np.uint8)
 
@@ -33,10 +41,12 @@ class FakeCameraPublisher(Node):
         return frame
 
     def add_obstacle(self, frame, x1, y1, x2, y2):
+        """Draw one rectangular obstacle on the fake camera image."""
         # White rectangle = strong edges for Canny
         cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 255, 255), -1)
 
     def publish_test_frame(self):
+        """Publish the next obstacle layout in the test cycle."""
         frame = self.make_base_frame()
         label = ""
 
@@ -71,6 +81,7 @@ class FakeCameraPublisher(Node):
             self.add_obstacle(frame, 240, 320, 390, 460)
             self.add_obstacle(frame, 430, 320, 610, 460)
 
+        # Convert the OpenCV frame back into a ROS Image message.
         msg = self.bridge.cv2_to_imgmsg(frame, encoding='bgr8')
         self.pub.publish(msg)
 
@@ -80,6 +91,7 @@ class FakeCameraPublisher(Node):
 
 
 def main(args=None):
+    """Start the fake camera publisher."""
     rclpy.init(args=args)
     node = FakeCameraPublisher()
     try:

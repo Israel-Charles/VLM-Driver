@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Baseline ROS 2 computer-vision node for simple obstacle avoidance."""
 
 import time
 from typing import Dict, Tuple
@@ -14,11 +15,16 @@ from vlm_driver_msgs.msg import DrivingDecisions, PipelineMetrics
 
 
 class BaselineCVNode(Node):
+    """Process camera images and publish baseline driving decisions."""
+
     def __init__(self) -> None:
+        """Initialize subscriptions, publishers, parameters, and node state."""
         super().__init__('baseline_cv_node')
 
+        # CvBridge handles conversion between ROS Image messages and OpenCV arrays.
         self.bridge = CvBridge() #library to conver ros msgs to opencv 
 
+        # Image-processing parameters tune how much of the frame is used and how masks are filtered.
         self.declare_parameter('image_topic', '/camera/camera/color/image_raw')
         self.declare_parameter('roi_top_ratio', 0) #no cutting
         self.declare_parameter('blur_kernel', 5)
@@ -26,6 +32,7 @@ class BaselineCVNode(Node):
         self.declare_parameter('canny_high', 150)
         self.declare_parameter('dilate_iterations', 1)
 
+        # Decision thresholds control when the node stops, creeps, or drives faster.
         self.declare_parameter('stop_score_threshold', 0.08)
         self.declare_parameter('near_stop_score_threshold', 0.20)
         self.declare_parameter('blocked_score_threshold', 0.05)
@@ -41,6 +48,7 @@ class BaselineCVNode(Node):
             10
         )
 
+        # Publishers expose the final command, debug visualization, mask, and timing metrics.
         self.decision_pub = self.create_publisher(
             DrivingDecisions,
             '/baseline/decision',
@@ -62,16 +70,20 @@ class BaselineCVNode(Node):
             10
         )
 
+        # Track frame timing so the metrics topic can report an approximate FPS.
         self.last_frame_time = None
 
+        # Recovery state remembers when the vehicle has been stopped for several frames.
         self.stop_streak = 0
         self.creep_frames_left = 0
         self.creep_steering_label = 'straight'
 
+        # Creep parameters decide when and how long to attempt forward recovery.
         self.declare_parameter('creep_trigger_frames', 10)
         self.declare_parameter('creep_duration_frames', 12)
         self.declare_parameter('creep_clear_margin', 0.03)
 
+        # Convert high-level steering labels into numeric steering angles.
         self.steering_map_deg: Dict[str, float] = {
             'hard_left': 40.0,
             'left': 25.0,
@@ -82,6 +94,7 @@ class BaselineCVNode(Node):
             'hard_right': -40.0,
         }
 
+        # Convert high-level speed labels into numeric speed commands.
         self.speed_map_mps: Dict[str, float] = {
             'stop': 0.0,
             'creep': 0.3,
@@ -93,6 +106,7 @@ class BaselineCVNode(Node):
         self.get_logger().info('Baseline CV node started.')
 
     def image_callback(self, msg: Image) -> None:
+        """Handle one camera frame, publish a decision, and emit debug outputs."""
         total_start = time.perf_counter()
 
         try:
@@ -102,11 +116,13 @@ class BaselineCVNode(Node):
             self.get_logger().error(f'Failed to convert image: {exc}')
             return
 
+        # Preprocessing isolates the region of interest and converts it into an obstacle mask.
         preprocess_start = time.perf_counter()
         roi, roi_offset_y = self.extract_roi(frame)
         mask = self.compute_obstacle_mask(roi)
         preprocess_end = time.perf_counter()
 
+        # Decision logic scores each sector, chooses a command, then applies stuck recovery.
         decision_start = time.perf_counter()
         sector_scores = self.compute_sector_scores(mask)
         steering_label, speed_label, confidence, emergency_stop = self.make_decision(sector_scores)
@@ -118,6 +134,7 @@ class BaselineCVNode(Node):
         emergency_stop )
         decision_end = time.perf_counter()
 
+        # Publish the compact driving command consumed by downstream control code.
         decision_msg = DrivingDecisions()
         decision_msg.header = msg.header
         decision_msg.source = 'baseline'
@@ -130,6 +147,7 @@ class BaselineCVNode(Node):
         self.decision_pub.publish(decision_msg)
          
         self.get_logger().info(f"Speed_label: {decision_msg.speed_label}, steering_label: {decision_msg.steering_label}")
+        # Build a visual overlay for debugging the ROI, sector scores, and selected command.
         overlay = self.draw_overlay(
             frame=frame,
             roi=roi,
@@ -156,6 +174,7 @@ class BaselineCVNode(Node):
 
         total_end = time.perf_counter()
 
+        # Estimate FPS from the time between consecutive callbacks.
         fps = 0.0
         now = time.perf_counter()
         if self.last_frame_time is not None:
@@ -164,6 +183,7 @@ class BaselineCVNode(Node):
                 fps = 1.0 / dt
         self.last_frame_time = now
 
+        # Report per-frame timing so baseline performance can be compared with other pipelines.
         metrics = PipelineMetrics()
         metrics.header = msg.header
         metrics.source = 'baseline'
@@ -232,11 +252,13 @@ class BaselineCVNode(Node):
         h, w = mask.shape
         third = w // 3 #dividing the obstacles into 3 parts
 
+        # Split the mask into left, center, and right vertical sectors.
         left = mask[:, :third]
         center = mask[:, third:2 * third]
         right = mask[:, 2 * third:]
 
         def score(region: np.ndarray) -> float:
+            """Return the fraction of obstacle pixels in one sector."""
             total_pixels = float(region.size)
             if total_pixels == 0:
                 return 1.0
@@ -249,10 +271,12 @@ class BaselineCVNode(Node):
         }
 
     def make_decision(self, scores: Dict[str, float]) -> Tuple[str, str, float, bool]:
+        """Choose steering, speed, confidence, and emergency-stop state from sector scores."""
         left = scores['left']
         center = scores['center']
         right = scores['right']
 
+        # Thresholds are loaded at runtime so they can be tuned through ROS parameters.
         stop_thresh = float(self.get_parameter('stop_score_threshold').value)
         blocked_thresh = float(self.get_parameter('blocked_score_threshold').value)
         fast_thresh = float(self.get_parameter('fast_score_threshold').value)
@@ -262,13 +286,16 @@ class BaselineCVNode(Node):
 
         near_stop_thresh = float(self.get_parameter('near_stop_score_threshold').value)
 
+        # Interpret the sector scores as simple blocked/clear states.
         all_blocked = left > blocked_thresh and center > blocked_thresh and right > blocked_thresh
         center_blocked = center > stop_thresh
         center_too_close = center > near_stop_thresh
 
+        # A large center obstacle gets an immediate emergency stop.
         if center_too_close:
             return 'straight', 'stop', 0.90, True
 
+        # If the front is blocked but not an emergency, creep toward the clearer side.
         if all_blocked or center_blocked:
             if left < right:
                 return 'left', 'creep', 0.70, False
@@ -280,11 +307,13 @@ class BaselineCVNode(Node):
         spread = max(scores.values()) - min(scores.values())
         confidence = max(0.1, min(1.0, 0.5 + 2.0 * spread)) #if one region is different from the other, confidence is high
 
+        # Prefer straight driving when the center is the clearest sector.
         if best_sector == 'center':
             if center < fast_thresh and left < medium_thresh and right < medium_thresh:
                 return 'straight', 'fast', confidence, False
             return 'straight', 'medium', confidence, False
 
+        # Otherwise steer toward the side with fewer obstacle pixels.
         if best_sector == 'left':
             if left + 0.03 < center:
                 return 'left', 'slow', confidence, False
@@ -361,20 +390,24 @@ class BaselineCVNode(Node):
         confidence: float,
         emergency_stop: bool,
     ) -> np.ndarray:
+        """Draw ROI boundaries, sector scores, command text, and mask preview."""
         overlay = frame.copy()
         h, w, _ = frame.shape
         roi_h, roi_w, _ = roi.shape
 
+        # Highlight the portion of the image used for obstacle detection.
         cv2.rectangle(overlay, (0, roi_offset_y), (w - 1, h - 1), (0, 255, 255), 2)
 
         third = roi_w // 3
         x1 = third
         x2 = 2 * third
 
+        # Draw sector boundaries aligned with the scoring regions.
         cv2.line(overlay, (x1, roi_offset_y), (x1, roi_offset_y + roi_h), (255, 0, 0), 2)
         cv2.line(overlay, (x2, roi_offset_y), (x2, roi_offset_y + roi_h), (255, 0, 0), 2)
 
         color = (0, 0, 255) if emergency_stop else (0, 255, 0)
+        # Show the selected command and confidence at the top of the frame.
         cv2.putText(
             overlay,
             f'Steer: {steering_label} | Speed: {speed_label} | Conf: {confidence:.2f}',
@@ -386,6 +419,7 @@ class BaselineCVNode(Node):
             cv2.LINE_AA
         )
 
+        # Show raw sector scores for tuning and troubleshooting.
         cv2.putText(
             overlay,
             f'L={sector_scores["left"]:.3f} C={sector_scores["center"]:.3f} R={sector_scores["right"]:.3f}',
@@ -407,6 +441,7 @@ class BaselineCVNode(Node):
 
 
 def main(args=None) -> None:
+    """Start the ROS 2 node and spin until shutdown."""
     rclpy.init(args=args)
     node = BaselineCVNode()
     try:
