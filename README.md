@@ -1,6 +1,6 @@
 # VLM-Driver
 
-A samll-scale vehicle built to test Vision-Language
+A small-scale vehicle built to test Vision-Language
 Model (VLM) in making the vehicle autonomous. A single forward-facing RGB camera streams frames into a VLM,
 which returns discrete driving decisions (steering label and speed label).
 Those labels are mapped to Ackermann steering commands and sent to a VESC
